@@ -1,0 +1,7 @@
+Power relay fujitsu
+1 pole 10 A
+
+http://www.fujitsu.com/downloads/MICRO/fcai/relays/ftr-h2.pdf
+
+GNU - GPL
+NO WARRANTY

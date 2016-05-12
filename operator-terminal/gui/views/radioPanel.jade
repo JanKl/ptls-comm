@@ -1,0 +1,101 @@
+extends layout
+
+block content
+  div#blockUiOverlay.blockUiOverlayDisabled
+  div.container
+    div.channelContainer
+      div#colChannel1.colChannel.colChannel4Cols
+        div#channelLabel1.channelLabel
+          div#channelTriggerMode1.channelTriggerMode
+          div#channelOperationMode1.channelOperationMode WU
+          div#channelId1.channelId 1
+          div#channelName1.channelName 51
+          div#channelDescription1.channelDescription RettD 2m
+          div#channelNowSpeaking1.channelNowSpeaking.channelNowSpeakingDummy &nbsp;
+        div.channelOccupationStatus
+          div.channelTransmitStatus
+            div#channelTransmitStatus1.TransmitInactive
+          div.channelReceiveStatus
+            div#channelReceiveStatus1.ReceiveInactive
+        div.channelInteraction
+          button#channelListenTo1.channelListenTo.ListenToInactive &nbsp;
+          button#channelTransmitOn1.channelTransmitOn.TransmitOnInactive &nbsp;
+      div#colChannel2.colChannel.colChannel4Cols
+        div#channelLabel2.channelLabel
+          div#channelTriggerMode2.channelTriggerMode
+          div#channelOperationMode2.channelOperationMode WU
+          div#channelId2.channelId 2
+          div#channelName2.channelName 49
+          div#channelDescription2.channelDescription SanD 2m
+          div#channelNowSpeaking2.channelNowSpeaking.channelNowSpeakingDummy &nbsp;
+        div.channelOccupationStatus
+          div.channelTransmitStatus
+            div#channelTransmitStatus2.TransmitInactive
+          div.channelReceiveStatus
+            div#channelReceiveStatus2.ReceiveInactive
+        div.channelInteraction
+          button#channelListenTo2.channelListenTo.ListenToInactive &nbsp;
+          button#channelTransmitOn2.channelTransmitOn.TransmitOnInactive &nbsp;
+      div#colChannel3.colChannel.colChannel4Cols
+        div#channelLabel3.channelLabel
+          div#channelTriggerMode3.channelTriggerMode
+          div#channelOperationMode3.channelOperationMode GU
+          div#channelId3.channelId 3
+          div#channelName3.channelName 410
+          div#channelDescription3.channelDescription RettD FR 4m
+          div#channelNowSpeaking3.channelNowSpeaking.channelNowSpeakingDummy &nbsp;
+        div.channelOccupationStatus
+          div.channelTransmitStatus
+            div#channelTransmitStatus3.TransmitInactive
+          div.channelReceiveStatus
+            div#channelReceiveStatus3.ReceiveInactive
+        div.channelInteraction
+          button#channelListenTo3.channelListenTo.ListenToInactive &nbsp;
+          button#channelTransmitOn3.channelTransmitOn.TransmitOnInactive &nbsp;
+      div#colChannel4.colChannel.colChannel4Cols
+        div#channelLabel4.channelLabel
+          div#channelTriggerMode4.channelTriggerMode T1K
+          div#channelOperationMode4.channelOperationMode GU
+          div#channelId4.channelId 4
+          div#channelName4.channelName 495
+          div#channelDescription4.channelDescription KatS FR 4m
+          div#channelNowSpeaking4.channelNowSpeaking.channelNowSpeakingDummy &nbsp;
+        div.channelOccupationStatus
+          div.channelTransmitStatus
+            div#channelTransmitStatus4.TransmitInactive
+          div.channelReceiveStatus
+            div#channelReceiveStatus4.ReceiveInactive
+        div.channelInteraction
+          button#channelListenTo4.channelListenTo.ListenToInactive &nbsp;
+          button#channelTransmitOn4.channelTransmitOn.TransmitOnInactive &nbsp;
+    div.operationContainer
+      div.colOperationLeft
+        button#pttOperation.pttOperation(disabled="") Senden
+      div.colOperationRight
+        button#transmitActivationTone1.transmitActivationTone(disabled="") Tonruf 1
+        button#transmitActivationTone2.transmitActivationTone(disabled="") Tonruf 2
+  div#channelSettingsDialog.channelSettingsDialogDisabled
+    h2 Daten von Kanal #[span#channelSettingsDialogChannelId] ändern
+    input#channelSettingsDialogFieldChannelId(type="hidden")
+    label(for="channelSettingsDialogFieldChannelName") Kanalname/Rufgruppe
+    input#channelSettingsDialogFieldChannelName(type="text")
+    label(for="channelSettingsDialogFieldChannelDescription") Beschreibung
+    input#channelSettingsDialogFieldChannelDescription(type="text")
+    label(for="channelSettingsDialogFieldChannelOperationMode") Betriebsmodus
+    select#channelSettingsDialogFieldChannelOperationMode(size=1)
+      option(value="") kein
+      option(value="GU") GU (analog)
+      option(value="GO") GO (analog)
+      option(value="WU") WU (analog)
+      option(value="WO") WO (analog)
+      option(value="TMO") TMO (Tetra)
+      option(value="DMO") DMO (Tetra)
+    label(for="channelSettingsDialogFieldChannelTriggerMode") Tonruf
+    select#channelSettingsDialogFieldChannelTriggerMode(size=1)
+      option(value="") kein
+      option(value="T1K") Tonruf 1 kurz
+      option(value="T1L") Tonruf 1 lang
+      option(value="T2K") Tonruf 2 kurz
+      option(value="T2L") Tonruf 2 lang
+    button#channelSettingsDialogButtonSave.buttonGreen Speichern
+    button#channelSettingsDialogButtonCancel.buttonRed Abbrechen

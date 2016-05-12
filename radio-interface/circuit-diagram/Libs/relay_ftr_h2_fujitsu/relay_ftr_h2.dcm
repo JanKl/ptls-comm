@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0  Date: ven. 12 avril 2013 21:32:35 CEST
+#
+$CMP RELAY_FTR_H2
+D Relay Fujitsu FTR-H2 Series
+K Relay
+F http://www.fujitsu.com/downloads/MICRO/fcai/relays/ftr-h2.pdf
+$ENDCMP
+#
+#End Doc Library
