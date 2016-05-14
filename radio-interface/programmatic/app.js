@@ -50,17 +50,20 @@ for (var i = 0; i < channelsCount; ++i) {
   // Initialize in / Squelch trigger
   var gpioInSquelchCount = gpioInSquelch.push(new gpio(config['channels'][i]['gpioInSquelch'], 'in', 'both'));
   var gpioInSquelchId = gpioInSquelchCount - 1;
+  config['channels'][i]['gpioInSquelchMapping'] = gpioInSquelchId;
   gpioInSquelch[gpioInSquelchId].watch(function (err, value) {
     if (err) {
       throw err;
     }
 
-    squelchStatusChanged(config['channels'][i]['channelInternalName'], value);
+    squelchStatusChanged(gpioInSquelchId, value);
   });
 }
 
-function squelchStatusChanged(channelInternalName, newSquelchValue) {
-  console.log('On channel "' + channelInternalName + '" squelch status is now "' + newSquelchValue + '"');
+function squelchStatusChanged(gpioInSquelchId, newSquelchValue) {
+  var channelData = getChannelDataByGpioInSquelchId(gpioInSquelchId);
+  
+  console.log('On channel "' + channelData['channelInternalName'] + '" squelch status is now "' + newSquelchValue + '"');
 }
 
 // Free the GPIO ressources on termination of the application.
@@ -112,8 +115,8 @@ app.get('/channels/:channelInternalName', function (req, res, next) {
 
 /**
  * Retrieves the data for a channel identified by the given internal name.
- * @param {String} channelInternalName Internal name of the channel to retrieve the data from.
- * @returns {Object} The object containing the data to the requested channel.
+ * @param {string} channelInternalName Internal name of the channel to retrieve the data from.
+ * @returns {object} The object containing the data to the requested channel.
  * @throws {TypeError} Thrown if either {@link channelInternalName} is empty or no channels were defined in the config file.
  * @throws {ElementNotFoundError} Thrown if the requested channel wasn't found.
  */
@@ -135,7 +138,34 @@ function getChannelData(channelInternalName) {
   }
 
   // Channel not found
-  throw new ElementNotFoundError('channel ' + channelInternalName);
+  throw new ElementNotFoundError('channel with channelInternalName ' + channelInternalName);
+}
+
+/**
+ * Retrieves the data for a channel identified by the given gpioInSquelchId.
+ * @param {number} gpioInSquelchId Internal ID of the GPIO export of the channel to retrieve the data from.
+ * @returns {object} The object containing the data to the requested channel.
+ * @throws {TypeError} Thrown if either {@link gpioInSquelchId} is not a Number or no channels were defined in the config file.
+ * @throws {ElementNotFoundError} Thrown if the requested channel wasn't found.
+ */
+function getChannelDataByGpioInSquelchId(gpioInSquelchId) {
+  if (typeof gpioInSquelchId != 'number') {
+    throw new TypeError('gpioInSquelchId not given. ');
+  }
+
+  if (!config['channels']) {
+    throw new TypeError('No channels found.');
+  }
+
+  var channelsCount = config['channels'].length;
+  for (var i = 0; i < channelsCount; ++i) {
+    if (config['channels'][i]['gpioInSquelchMapping'] == gpioInSquelchId) {
+      return config['channels'][i];
+    }
+  }
+
+  // Channel not found
+  throw new ElementNotFoundError('channel with gpioInSquelchId ' + gpioInSquelchId);
 }
 
 
