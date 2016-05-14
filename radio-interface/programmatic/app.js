@@ -66,6 +66,14 @@ function squelchStatusChanged(gpioInSquelchId, newSquelchValue) {
   console.log('On channel "' + channelData['channelInternalName'] + '" squelch status is now "' + newSquelchValue + '"');
 }
 
+function setPttValue(gpioOutPttId, newPttValue) {
+  if (newPttValue !== 1 && newPttValue !== 0) {
+    throw new TypeError('newPttValue may only be 0 or 1');
+  }
+  
+  gpioOutPtt[gpioOutPttId].writeSync(newPttValue);
+}
+
 // Free the GPIO ressources on termination of the application.
 process.on('SIGINT', function () {
   var gpioOutPttCount = gpioOutPtt.length;
@@ -111,6 +119,66 @@ app.get('/channels/:channelInternalName', function (req, res, next) {
 
   res.status(200);
   res.json(channelData);
+});
+
+// Start sending on channel
+app.put('/channels/:channelInternalName/transmitStart', function (req, res, next) {
+  if (typeof req.params.channelInternalName == 'undefined') {
+    res.status(400);
+    res.end();
+    return;
+  }
+
+  try {
+    var channelData = getChannelData(req.params.channelInternalName);
+  } catch (error) {
+    if (error instanceof TypeError) {
+      res.status(400);
+    } else if (error instanceof ElementNotFoundError) {
+      res.status(404);
+    } else {
+      res.status(500);
+    }
+
+    console.error(error.name + ': ' + error.message);
+    res.end();
+    return;
+  }
+
+  setPttValue(channelData['gpioOutPttMapping'], 1);
+
+  res.status(200);
+  res.end();
+});
+
+// Start sending on channel
+app.put('/channels/:channelInternalName/transmitStop', function (req, res, next) {
+  if (typeof req.params.channelInternalName == 'undefined') {
+    res.status(400);
+    res.end();
+    return;
+  }
+
+  try {
+    var channelData = getChannelData(req.params.channelInternalName);
+  } catch (error) {
+    if (error instanceof TypeError) {
+      res.status(400);
+    } else if (error instanceof ElementNotFoundError) {
+      res.status(404);
+    } else {
+      res.status(500);
+    }
+
+    console.error(error.name + ': ' + error.message);
+    res.end();
+    return;
+  }
+
+  setPttValue(channelData['gpioOutPttMapping'], 0);
+
+  res.status(200);
+  res.end();
 });
 
 /**
