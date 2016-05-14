@@ -57,18 +57,18 @@ definitions:
     properties:
       channelInternalName:
         type: string
-      gpio-out-ptt:
+      gpioOutPtt:
         type: integer
         format: int32
-      gpio-in-squelch:
+      gpioInSquelch:
         type: integer
         format: int32
-      audio-out-device:
+      audioOutDevice:
         type: string
-      audio-out-channel:
+      audioOutChannel:
         type: string
-      audio-in-device:
+      audioInDevice:
         type: string
-      audio-in-channel:
+      audioInChannel:
         type: string
 
