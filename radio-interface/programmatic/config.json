@@ -10,5 +10,8 @@
       "audio-in-channel": "left"
     }
   ],
-  "nodeName": "ch1ch2"
+  "nodeName": "ch1ch2",
+  "mcuHostName": "roip-mcu",
+  "centralWebserverHostName": "roip-mcu",
+  "centralWebserverPort": 3000
 }
