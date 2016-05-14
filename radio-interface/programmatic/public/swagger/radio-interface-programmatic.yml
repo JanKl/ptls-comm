@@ -1,0 +1,74 @@
+swagger: '2.0'
+info:
+  version: '1.0.0'
+  title: Radio Interface ptls-comm
+  description: An API that exposes data for a radio channel.
+  license:
+    name: MIT
+    url: http://opensource.org/licenses/MIT
+host: localhost:3000
+basePath: /
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /channels:
+    get:
+      description: Returns all pets from the system that the user has access to
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: channel response
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/channel'
+        default:
+          description: unexpected error
+  /channels/{channelInternalName}:
+    get:
+      description: Returns the channel identified by the given name
+      produces:
+        - application/json
+      parameters:
+        - name: channelInternalName
+          in: path
+          description: ID of channel to fetch
+          required: true
+          type: string
+      responses:
+        '200':
+          description: channel response
+          schema:
+            $ref: '#/definitions/channel'
+        '400':
+          description: parameter invalid
+        '404':
+          description: channel not found
+        default:
+          description: unexpected error
+definitions:
+  channel:
+    type: object
+    properties:
+      channelInternalName:
+        type: string
+      gpio-out-ptt:
+        type: integer
+        format: int32
+      gpio-in-squelch:
+        type: integer
+        format: int32
+      audio-out-device:
+        type: string
+      audio-out-channel:
+        type: string
+      audio-in-device:
+        type: string
+      audio-in-channel:
+        type: string
+
