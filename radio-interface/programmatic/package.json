@@ -13,7 +13,7 @@
     "jade": "~1.11.0",
     "jsonfile": "^2.3.1",
     "morgan": "~1.6.1",
-    "serve-favicon": "~2.3.0"
+    "onoff": "^1.1.0"
   },
   "description": "radio interface program to be able to control the connected radio device",
   "main": "app.js",
