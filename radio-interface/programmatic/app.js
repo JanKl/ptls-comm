@@ -3,6 +3,7 @@ var path = require('path');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var gpio = require('onoff').Gpio;
 
 var routes = require('./routes/index');
 
@@ -34,6 +35,47 @@ function ElementNotFoundError(elementName) {
 ElementNotFoundError.prototype = Object.create(Error.prototype);
 ElementNotFoundError.prototype.constructor = ElementNotFoundError;
 
+// GPIO interface settings to control the radio device on all channels
+var gpioOutPtt = [];
+var gpioInSquelch = [];
+
+var channelsCount = config['channels'].length;
+for (var i = 0; i < channelsCount; ++i) {
+  // Initialize out / PTT
+  var gpioOutPttCount = gpioOutPtt.push(new gpio(config['channels'][i]['gpioOutPtt'], 'out'));
+  var gpioOutPttId = gpioOutPttCount - 1;
+  config['channels'][i]['gpioOutPttMapping'] = gpioOutPttId;
+  gpioOutPtt[gpioOutPttId].writeSync(0);
+
+  // Initialize in / Squelch trigger
+  var gpioInSquelchCount = gpioInSquelch.push(new gpio(config['channels'][i]['gpioInSquelch'], 'in', 'both'));
+  var gpioInSquelchId = gpioInSquelchCount - 1;
+  gpioInSquelch[gpioInSquelchId].watch(function (err, value) {
+    if (err) {
+      throw err;
+    }
+
+    squelchStatusChanged(config['channels'][i]['channelInternalName'], value);
+  });
+}
+
+function squelchStatusChanged(channelInternalName, newSquelchValue) {
+  console.log('On channel "' + channelInternalName + '" squelch status is now "' + newSquelchValue + '"');
+}
+
+// Free the GPIO ressources on termination of the application.
+process.on('SIGINT', function () {
+  var gpioOutPttCount = gpioOutPtt.length;
+  for (var i; i < gpioOutPttCount; ++i) {
+    gpioOutPtt[i].unexport();
+  }
+
+  var gpioInSquelchCount = gpioInSquelch.length;
+  for (var i; i < gpioInSquelchCount; ++i) {
+    gpioInSquelch[i].unexport();
+  }
+});
+
 // Export data of all available channels
 app.get('/channels', function (req, res, next) {
   res.status(200);
@@ -58,18 +100,15 @@ app.get('/channels/:channelInternalName', function (req, res, next) {
     } else {
       res.status(500);
     }
-    
+
     console.error(error.name + ': ' + error.message);
     res.end();
     return;
   }
-  
+
   res.status(200);
   res.json(channelData);
 });
-
-
-
 
 /**
  * Retrieves the data for a channel identified by the given internal name.

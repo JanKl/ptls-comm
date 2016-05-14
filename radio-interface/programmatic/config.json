@@ -2,12 +2,12 @@
   "channels": [
     {
       "channelInternalName": "ch01",
-      "gpio-out-ptt": 0,
-      "gpio-in-squelch": 0,
-      "audio-out-device": "hw:1,0",
-      "audio-out-channel": "left",
-      "audio-in-device": "hw:1,0",
-      "audio-in-channel": "left"
+      "gpioOutPtt": 17,
+      "gpioInSquelch": 18,
+      "audioOutDevice": "hw:1,0",
+      "audioOutChannel": "left",
+      "audioInDevice": "hw:1,0",
+      "audioInChannel": "left"
     }
   ],
   "nodeName": "ch1ch2",
