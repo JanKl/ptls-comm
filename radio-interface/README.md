@@ -24,6 +24,7 @@ Radio interface hardware and software for a Raspberry Pi.
     1. Use git to check out the current source code (`sudo apt-get -y install git-core`, `git clone https://github.com/JanKl/ptls-comm.git`)
     1. Head into the <a href="programmatic/">programmatic/</a> folder in the checked out folder `cd ptls-comm/radio-interface/programmatic`.
     1. Use your preferred text editor to change the config.json according to your needs.
+    1. Run `npm update` to update the dependencies.
     1. Run `npm start` to start the application.
 1. Create the circuit as described in the <a href="circuit/">circuit/</a> folder.
 1. Connect your radio and your Pi to the circuit.
