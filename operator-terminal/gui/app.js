@@ -22,7 +22,8 @@ setupStorage();
 
 function setupStorage() {
   var channelCount = config['channels'].length;
-  for (var i; i < channelCount; ++i) {
+  
+  for (var i = 0; i < channelCount; ++i) {
     var channelInternalName = config['channels'][i]['channelInternalName'];
     channelLocalData[channelInternalName] = {
       configIndex: i,
@@ -68,15 +69,17 @@ app.get('/channels/:channelInternalName', function (req, res, next) {
     return;
   }
   
+  var channelInternalName = req.params.channelInternalName;
+  
   // Check if channel exists
-  if (!channelLocalData[channelObject['channelInternalName']]) {
+  if (!channelLocalData[channelInternalName]) {
     res.status(404);
     res.end();
     return;
   }
-
+  
   // Retrieve the data from the cache
-  var configIndex = channelLocalData[channelObject['channelInternalName']]['configIndex'];
+  var configIndex = channelLocalData[channelInternalName]['configIndex'];
 
   res.status(200);
   res.json(config['channels'][configIndex]);
