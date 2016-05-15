@@ -67,7 +67,7 @@ paths:
           type: string
       responses:
         '204':
-          description: Successful set
+          description: Successfully set
         '400':
           description: parameter invalid
         '404':
@@ -76,7 +76,7 @@ paths:
           description: unexpected error
   /channels/{channelInternalName}/setChannelReleased:
     put:
-      description: Deactivates the radio device for a transmission
+      description: Deactivates the radio device for a transmission. This endpoint will be called by the radio interface.
       parameters:
         - name: channelInternalName
           in: path
@@ -85,7 +85,45 @@ paths:
           type: string
       responses:
         '204':
-          description: Successful set
+          description: Successfully set
+        '400':
+          description: parameter invalid
+        '404':
+          description: channel not found
+        default:
+          description: unexpected error
+  /channels/{channelInternalName}/speechRequest:
+    put:
+      description: Turns in a speech request that will be validated and the radio's PTT will be activated, if positive.
+      parameters:
+        - name: channelInternalName
+          in: path
+          description: Internal name of channel
+          required: true
+          type: string
+      responses:
+        '204':
+          description: now transmitting
+        '400':
+          description: parameter invalid
+        '404':
+          description: channel not found
+        '503':
+          description: channel temp. not available
+        default:
+          description: unexpected error
+  /channels/{channelInternalName}/speechTerminated:
+    put:
+      description: Indicates that the radio call was terminated by the operator.
+      parameters:
+        - name: channelInternalName
+          in: path
+          description: Internal name of channel
+          required: true
+          type: string
+      responses:
+        '204':
+          description: radio device informed
         '400':
           description: parameter invalid
         '404':

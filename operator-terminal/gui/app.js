@@ -1,4 +1,5 @@
 var fs = require('fs');
+var http = require('http');
 var express = require('express');
 var socketIo = require('socket.io');
 var path = require('path');
@@ -149,6 +150,106 @@ app.put('/channels/:channelInternalName/setChannelReleased', function (req, res,
 
   res.status(204);
   res.end();
+});
+
+// Speech request from a connected browser
+app.put('/channels/:channelInternalName/speechRequest', function (req, res, next) {
+  if (typeof req.params.channelInternalName == 'undefined') {
+    res.status(400);
+    res.end();
+    return;
+  }
+
+  var channelInternalName = req.params.channelInternalName;
+
+  // Check if channel exists
+  if (!channelLocalData[channelInternalName]) {
+    res.status(404);
+    res.end();
+    return;
+  }
+  
+  // Retrieve the data from the cache
+  var configIndex = channelLocalData[channelInternalName]['configIndex'];
+  
+  // Check if a radio interface was assigned to the channel 
+  if (config['channels'][configIndex]['radioInterfaceWebHost'] == '' || config['channels'][configIndex]['radioInterfaceWebPort'] == 0) {
+    res.status(503);
+    res.end();
+    return;
+  }
+
+  // Try to get a time slot
+  // TODO where will a 503 from the radio interface be processed?
+  http.get({
+    hostname: config['channels'][configIndex]['radioInterfaceWebHost'],
+    port: config['channels'][configIndex]['radioInterfaceWebPort'],
+    method: 'PUT',
+    path: '/channels/' + channelInternalName + '/transmissionStart'
+  }).on('response', function (speechRequestResponse) {
+    if (speechRequestResponse.statusCode != 204) {
+      console.error("Got unexpected status code '" + res.statusCode + "' while trying to start the transmission on channel '" + channelInternalName + "'.");
+      res.status(500);
+      res.end();
+    } else {
+      // Now transmitting
+      res.status(204);
+      res.end();
+    }
+  }).on('error', function (err) {
+    console.error("Got error while trying to start the transmission on channel '" + channelInternalName + "': " + err.message);
+    res.status(500);
+    res.end();
+  });
+});
+
+// Speech request terminated by operator
+app.put('/channels/:channelInternalName/speechTerminated', function (req, res, next) {
+  if (typeof req.params.channelInternalName == 'undefined') {
+    res.status(400);
+    res.end();
+    return;
+  }
+
+  var channelInternalName = req.params.channelInternalName;
+
+  // Check if channel exists
+  if (!channelLocalData[channelInternalName]) {
+    res.status(404);
+    res.end();
+    return;
+  }
+  
+  // Retrieve the data from the cache
+  var configIndex = channelLocalData[channelInternalName]['configIndex'];
+  
+  // Check if a radio interface was assigned to the channel 
+  if (config['channels'][configIndex]['radioInterfaceWebHost'] == '' || config['channels'][configIndex]['radioInterfaceWebPort'] == 0) {
+    res.status(503);
+    res.end();
+    return;
+  }
+  
+  // Inform the radio device about the transmission end
+  http.get({
+    hostname: config['channels'][configIndex]['radioInterfaceWebHost'],
+    port: config['channels'][configIndex]['radioInterfaceWebPort'],
+    method: 'PUT',
+    path: '/channels/' + channelInternalName + '/transmissionStop'
+  }).on('response', function (speechTerminationResponse) {
+    if (speechTerminationResponse.statusCode != 204) {
+      console.error("Got unexpected status code '" + res.statusCode + "' while trying to stop the transmission on channel '" + channelInternalName + "'.");
+      res.status(500);
+      res.end();
+    } else {
+      res.status(204);
+      res.end();
+    }
+  }).on('error', function (err) {
+    console.error("Got error while trying to stop the transmission on channel '" + channelInternalName + "': " + err.message);
+    res.status(500);
+    res.end();
+  });
 });
 
 // Data storage
