@@ -147,7 +147,7 @@ app.put('/channels/:channelInternalName/transmissionStart', function (req, res, 
 
   setPttValue(channelData['gpioOutPttMapping'], 1);
 
-  res.status(200);
+  res.status(204);
   res.end();
 });
 
@@ -177,7 +177,7 @@ app.put('/channels/:channelInternalName/transmissionStop', function (req, res, n
 
   setPttValue(channelData['gpioOutPttMapping'], 0);
 
-  res.status(200);
+  res.status(204);
   res.end();
 });
 

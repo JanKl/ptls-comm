@@ -61,7 +61,7 @@ paths:
           required: true
           type: string
       responses:
-        '200':
+        '204':
           description: now transmitting
         '400':
           description: parameter invalid
@@ -81,7 +81,7 @@ paths:
           required: true
           type: string
       responses:
-        '200':
+        '204':
           description: Successful set
         '400':
           description: parameter invalid
