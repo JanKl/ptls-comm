@@ -122,7 +122,7 @@ app.get('/channels/:channelInternalName', function (req, res, next) {
 });
 
 // Start sending on channel
-app.put('/channels/:channelInternalName/transmitStart', function (req, res, next) {
+app.put('/channels/:channelInternalName/transmissionStart', function (req, res, next) {
   if (typeof req.params.channelInternalName == 'undefined') {
     res.status(400);
     res.end();
@@ -152,7 +152,7 @@ app.put('/channels/:channelInternalName/transmitStart', function (req, res, next
 });
 
 // Start sending on channel
-app.put('/channels/:channelInternalName/transmitStop', function (req, res, next) {
+app.put('/channels/:channelInternalName/transmissionStop', function (req, res, next) {
   if (typeof req.params.channelInternalName == 'undefined') {
     res.status(400);
     res.end();
