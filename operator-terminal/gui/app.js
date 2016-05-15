@@ -116,7 +116,10 @@ app.put('/channels/:channelInternalName/setChannelOccupied', function (req, res,
   }
 
   // Inform all observers
-  // TODO
+  io.emit('channelOccupied', {
+    channelInternalName: channelInternalName,
+    occupiedBy: occupiedBy
+  });
 
   res.status(204);
   res.end();
@@ -140,7 +143,9 @@ app.put('/channels/:channelInternalName/setChannelReleased', function (req, res,
   }
 
   // Inform all observers
-  // TODO
+  io.emit('channelReleased', {
+    channelInternalName: channelInternalName
+  });
 
   res.status(204);
   res.end();
@@ -190,10 +195,6 @@ function storeChannelData(channelObject) {
   fs.writeFileSync(configPath, JSON.stringify(configFileData));
   config = configFileData;  // Update cache
 }
-
-io.on('connection', function(socket) {
-  console.log('user connected');
-});
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
