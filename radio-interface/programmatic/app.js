@@ -85,6 +85,8 @@ process.on('SIGINT', function () {
   for (var i; i < gpioInSquelchCount; ++i) {
     gpioInSquelch[i].unexport();
   }
+  
+  process.exit();
 });
 
 // Export data of all available channels
