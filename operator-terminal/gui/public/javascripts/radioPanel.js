@@ -206,16 +206,42 @@ function pttTriggerOperation(sendActive) {
   if (typeof sendActive !== "boolean") {
     throw new Error("sendActive not valid");
   }
+  
+  if (sendActive && currentlyTransmittingOnChannel) {
+    // Start a transmission, but we are already transmitting.
+    return;
+  }
+  
+  if (!sendActive && !currentlyTransmittingOnChannel) {
+    // Stop a transmission, but we aren't transmitting anyway.
+    setPttForbidden(false);
+    return;
+  }
 
   if (sendActive) {
     if (transmitOnChannel !== '') {
-      setPttOnChannel(transmitOnChannel, true);
+      $.ajax({
+        url: '/channels/' + transmitOnChannel + '/speechRequest',
+        type: 'PUT',
+        success: function speechRequestSuccess() {
+          setPttOnChannel(transmitOnChannel, true);
+        },
+        error: function speechRequestError() {
+          setPttForbidden(true);
+        }
+      });
     } else {
       setPttForbidden(true);
     }
   } else {
     if (currentlyTransmittingOnChannel !== '') {
-      setPttOnChannel(currentlyTransmittingOnChannel, false);
+      $.ajax({
+        url: '/channels/' + transmitOnChannel + '/speechTerminated',
+        type: 'PUT',
+        success: function speechTerminatedSuccess() {
+          setPttOnChannel(currentlyTransmittingOnChannel, false);
+        }
+      });
     } else {
       setPttForbidden(false);
     }
