@@ -1,0 +1,40 @@
+{
+  "channels": [
+    {
+      "channelInternalName": "2m01",
+      "name": "51",
+      "description": "RettD 2m",
+      "operationMode": "WU",
+      "triggerMode": "",
+      "radioInterfaceWebHost": "",
+      "radioInterfaceWebPort": 0
+    },
+    {
+      "channelInternalName": "2m02",
+      "name": "49",
+      "description": "SanD 2m",
+      "operationMode": "WU",
+      "triggerMode": "",
+      "radioInterfaceWebHost": "",
+      "radioInterfaceWebPort": 0
+    },
+    {
+      "channelInternalName": "4m01",
+      "name": "410",
+      "description": "RettD 4m",
+      "operationMode": "GU",
+      "triggerMode": "",
+      "radioInterfaceWebHost": "roip-interface-ch1ch2",
+      "radioInterfaceWebPort": 3000
+    },
+    {
+      "channelInternalName": "4m02",
+      "name": "495",
+      "description": "KatS 4m",
+      "operationMode": "GU",
+      "triggerMode": "T1K",
+      "radioInterfaceWebHost": "",
+      "radioInterfaceWebPort": 0
+    }
+  ]
+}

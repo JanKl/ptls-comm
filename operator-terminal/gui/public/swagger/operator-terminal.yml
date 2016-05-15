@@ -1,0 +1,114 @@
+swagger: '2.0'
+info:
+  version: '1.0.0'
+  title: Operator Terminal ptls-comm
+  description: An API that allowes for administration of and PTT for the channels.
+  license:
+    name: MIT
+    url: http://opensource.org/licenses/MIT
+host: roip-mcu:3000
+basePath: /
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /channels:
+    get:
+      description: Returns all available channels
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: channel response
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/channel'
+        default:
+          description: unexpected error
+  /channels/{channelInternalName}:
+    get:
+      description: Returns the channel identified by the given internal name
+      produces:
+        - application/json
+      parameters:
+        - name: channelInternalName
+          in: path
+          description: Name of channel to fetch
+          required: true
+          type: string
+      responses:
+        '200':
+          description: channel response
+          schema:
+            $ref: '#/definitions/channel'
+        '400':
+          description: parameter invalid
+        '404':
+          description: channel not found
+        default:
+          description: unexpected error
+  /channels/{channelInternalName}/setChannelOccupied:
+    put:
+      description: Sets the channel to be occupied. This endpoint will be called by the radio interface.
+      parameters:
+        - name: channelInternalName
+          in: path
+          description: Name of channel to set to be occupied
+          required: true
+          type: string
+        - name: occupiedBy
+          in: query
+          description: If available this field should contain the caller identification
+          required: false
+          type: string
+      responses:
+        '204':
+          description: Successful set
+        '400':
+          description: parameter invalid
+        '404':
+          description: channel not found
+        default:
+          description: unexpected error
+  /channels/{channelInternalName}/setChannelReleased:
+    put:
+      description: Deactivates the radio device for a transmission
+      parameters:
+        - name: channelInternalName
+          in: path
+          description: Name of channel to set to be released
+          required: true
+          type: string
+      responses:
+        '204':
+          description: Successful set
+        '400':
+          description: parameter invalid
+        '404':
+          description: channel not found
+        default:
+          description: unexpected error
+definitions:
+  channel:
+    type: object
+    properties:
+      channelInternalName:
+        type: string
+      name:
+        type: string
+      description:
+        type: string
+      operationMode:
+        type: string
+      triggerMode:
+        type: string
+      radioInterfaceWebHost:
+        type: string
+      radioInterfaceWebPort:
+        type: integer
+        format: int32
+
