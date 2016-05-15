@@ -10,7 +10,7 @@ Radio interface hardware and software for a Raspberry Pi.
   1. Install Node.js and npm on the Pi. You can do this by using a pre-built version from the Node.js's distribution page as described below (<a href="http://jankarres.de/2013/07/raspberry-pi-node-js-installieren/">Credits</a>). Don't use apt-get to retrieve Node.js and npm as the sources are hopelessly outdated!
     1. Head your Browser to <a href="http://nodejs.org/dist/">the Node.js distribution list</a>. Select your preferred version (I would suggest the latest or a LTS version), in the subdirectory select the correct processor version. For a Raspberry Pi 2 Model B Version 1.1 this would be armv71.
     1. `cd /opt`.
-    1. `sudo wget http://nodejs.org/dist/v6.1.0/node-v6.1.0-linux-armv7l.tar.gz` (replace with your selected version of node js.
+    1. `sudo wget http://nodejs.org/dist/v6.1.0/node-v6.1.0-linux-armv7l.tar.gz` (replace with your selected version of node js).
     1. `sudo tar xfvz node-v6.1.0-linux-armv7l.tar.gz`
     1. `sudo rm node-v6.1.0-linux-armv7l.tar.gz`
     1. `sudo mv node-v6.1.0-linux-armv7l/ node/`
@@ -22,8 +22,8 @@ Radio interface hardware and software for a Raspberry Pi.
   1. You can now configure the node application itself:
     1. Go into your home directory `cd ~` (or your preferred folder for git files).
     1. Use git to check out the current source code (`sudo apt-get -y install git-core`, `git clone https://github.com/JanKl/ptls-comm.git`)
+    1. Use your preferred text editor to change the ptls-comm/radio-interface/config.json according to your needs.
     1. Head into the <a href="programmatic/">programmatic/</a> folder in the checked out folder `cd ptls-comm/radio-interface/programmatic`.
-    1. Use your preferred text editor to change the config.json according to your needs.
     1. Run `npm update` to update the dependencies.
     1. Run `npm start` to start the application.
 1. Create the circuit as described in the <a href="circuit/">circuit/</a> folder.

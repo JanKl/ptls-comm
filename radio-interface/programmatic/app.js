@@ -11,7 +11,7 @@ var app = express();
 
 // read configuration data
 var jsonfile = require('jsonfile');
-var configPath = 'config.json';
+var configPath = '../config.json';
 var config = jsonfile.readFileSync(configPath);
 
 // view engine setup

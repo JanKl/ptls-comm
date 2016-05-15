@@ -17,7 +17,7 @@ produces:
 paths:
   /channels:
     get:
-      description: Returns all pets from the system that the user has access to
+      description: Returns all available channels
       produces:
         - application/json
       responses:
