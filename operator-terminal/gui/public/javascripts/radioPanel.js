@@ -1,3 +1,5 @@
+var socket = io();
+
 var channels = {
   1: {
     name: "51",

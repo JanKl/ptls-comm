@@ -1,5 +1,6 @@
 var fs = require('fs');
 var express = require('express');
+var socketIo = require('socket.io');
 var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
@@ -9,6 +10,9 @@ var bodyParser = require('body-parser');
 var routes = require('./routes/index');
 
 var app = express();
+
+var io = socketIo();
+app.io = io;
 
 // read configuration data
 var jsonfile = require('jsonfile');
@@ -22,7 +26,7 @@ setupStorage();
 
 function setupStorage() {
   var channelCount = config['channels'].length;
-  
+
   for (var i = 0; i < channelCount; ++i) {
     var channelInternalName = config['channels'][i]['channelInternalName'];
     channelLocalData[channelInternalName] = {
@@ -70,16 +74,16 @@ app.get('/channels/:channelInternalName', function (req, res, next) {
     res.end();
     return;
   }
-  
+
   var channelInternalName = req.params.channelInternalName;
-  
+
   // Check if channel exists
   if (!channelLocalData[channelInternalName]) {
     res.status(404);
     res.end();
     return;
   }
-  
+
   // Retrieve the data from the cache
   var configIndex = channelLocalData[channelInternalName]['configIndex'];
 
@@ -94,7 +98,7 @@ app.put('/channels/:channelInternalName/setChannelOccupied', function (req, res,
     res.end();
     return;
   }
-  
+
   var channelInternalName = req.params.channelInternalName;
 
   // Check if channel exists
@@ -103,10 +107,10 @@ app.put('/channels/:channelInternalName/setChannelOccupied', function (req, res,
     res.end();
     return;
   }
-  
+
   // Store occupied by
   var occupiedBy = '';
-  
+
   if (typeof req.query.occupiedBy != 'undefined') {
     occupiedBy = req.query.occupiedBy;
   }
@@ -125,7 +129,7 @@ app.put('/channels/:channelInternalName/setChannelReleased', function (req, res,
     res.end();
     return;
   }
-  
+
   var channelInternalName = req.params.channelInternalName;
 
   // Check if channel exists
@@ -171,7 +175,7 @@ function storeChannelData(channelObject) {
   if (typeof channelObject['radioInterfaceWebPort'] == 'undefined') {
     throw new TypeError('radioInterfaceWebPort not given.');
   }
-  
+
   // Check if channel exists
   if (!channelLocalData[channelObject['channelInternalName']]) {
     throw new ElementNotFoundError('channel with channelInternalName ' + channelObject['channelInternalName']);
@@ -186,6 +190,10 @@ function storeChannelData(channelObject) {
   fs.writeFileSync(configPath, JSON.stringify(configFileData));
   config = configFileData;  // Update cache
 }
+
+io.on('connection', function(socket) {
+  console.log('user connected');
+});
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
