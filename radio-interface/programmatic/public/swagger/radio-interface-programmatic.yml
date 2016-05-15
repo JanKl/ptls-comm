@@ -53,7 +53,7 @@ paths:
           description: unexpected error
   /channels/{channelInternalName}/transmitStart:
     put:
-      description: Activates the radio device for a transmission
+      description: Activates the radio device for a transmission. On digital radio devices where a timeslot has to be assigned prior to the transmission, this is done before returning a status code. If a timeslot cannot be assigned, the code 503 is returned.
       parameters:
         - name: channelInternalName
           in: path
@@ -62,11 +62,13 @@ paths:
           type: string
       responses:
         '200':
-          description: Successful set
+          description: now transmitting
         '400':
           description: parameter invalid
         '404':
           description: channel not found
+        '503':
+          description: channel occupied
         default:
           description: unexpected error
   /channels/{channelInternalName}/transmitStop:
