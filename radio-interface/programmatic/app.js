@@ -1,3 +1,4 @@
+var http = require('http');
 var express = require('express');
 var path = require('path');
 var logger = require('morgan');
@@ -11,7 +12,7 @@ var app = express();
 
 // read configuration data
 var jsonfile = require('jsonfile');
-var configPath = '../config.json';
+var configPath = 'config.json';
 var config = jsonfile.readFileSync(configPath);
 
 // view engine setup
@@ -64,6 +65,29 @@ for (var i = 0; i < channelsCount; ++i) {
 
 function squelchStatusChanged(gpioInSquelchId, newSquelchValue) {
   var channelData = getChannelDataByGpioInSquelchId(gpioInSquelchId);
+  
+  var pathToCall = '';
+  
+  if (newSquelchValue == 1) {
+    // TODO: Insert sender identification as query parameter
+    pathToCall = '/channels/' + channelData['channelInternalName'] + '/setChannelOccupied';
+  } else {
+    pathToCall = '/channels/' + channelData['channelInternalName'] + '/setChannelReleased';
+  }
+  
+  // Inform central web server about the change
+  http.get({
+    hostname: channelData['centralWebserverHost'],
+    port: channelData['centralWebserverPort'],
+    method: 'PUT',
+    path: pathToCall
+  }).on('response', function (res) {
+    if (res.statusCode != 204) {
+      console.error("Got unexpected status code '" + res.statusCode + "' while updating squelch status on central web server.");
+    }
+  }).on('error', function (err) {
+    console.error("Got error while updating squelch status on central web server: " + err.message);
+  });
   
   console.log('On channel "' + channelData['channelInternalName'] + '" squelch status is now "' + newSquelchValue + '"');
 }

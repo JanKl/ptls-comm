@@ -109,4 +109,14 @@ definitions:
         type: string
       audioInChannel:
         type: string
+      webrtcMcuHost:
+        type: string
+      webrtcMcuPort:
+        type: integer
+        format: int32
+      centralWebserverHost:
+        type: string
+      centralWebserverPort:
+        type: integer
+        format: int32
 

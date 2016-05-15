@@ -7,12 +7,11 @@
       "audioOutDevice": "hw:1,0",
       "audioOutChannel": "left",
       "audioInDevice": "hw:1,0",
-      "audioInChannel": "left"
+      "audioInChannel": "left",
+      "webrtcMcuHost": "roip-mcu",
+      "webrtcMcuPort": 0,
+      "centralWebserverHost": "roip-mcu",
+      "centralWebserverPort": 3000
     }
-  ],
-  "nodeName": "ch1ch2",
-  "webrtcMcuHost": "roip-mcu",
-  "webrtcMcuPort": 0,
-  "centralWebserverHost": "roip-mcu",
-  "centralWebserverPort": 3000
+  ]
 }
