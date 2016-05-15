@@ -7,6 +7,7 @@ The system consists of a web server and a MCU (WebRTC Multipoint Control Unit) c
 ## Installation
 If you use a Raspberry Pi as web server you can follow the installtion steps displayed in the <a href="../radio-interface/README.md">README for the radio interface</a>. You will need to install Node.js on your server.
 Furthermore these steps will be required:
+
 1. Go into your home directory `cd ~` (or your preferred folder for git files).
 1. Use git to check out the current source code (`sudo apt-get -y install git-core`, `git clone https://github.com/JanKl/ptls-comm.git`)
 1. Use your preferred text editor to change the ptls-comm/operator-terminal/config.json according to your needs.
