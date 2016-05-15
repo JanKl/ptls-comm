@@ -1,63 +1,61 @@
+/* global io */
+
 var socket = io();
 
-var channels = {
-  1: {
-    name: "51",
-    description: "RettD 2m",
-    operationMode: "WU",
-    triggerMode: "",
-    visible: true,
-    listenTo: false
-  },
-  2: {
-    name: "49",
-    description: "SanD 2m",
-    operationMode: "WU",
-    triggerMode: "",
-    visible: true,
-    listenTo: false
-  },
-  3: {
-    name: "410",
-    description: "RettD FR 4m",
-    operationMode: "GU",
-    triggerMode: "",
-    visible: true,
-    listenTo: false
-  },
-  4: {
-    name: "495",
-    description: "KatS FR 4m",
-    operationMode: "GU",
-    triggerMode: "T1K",
-    visible: true,
-    listenTo: false
-  }
-};
-var transmitOnChannel = 0;
-var currentlyTransmittingOnChannel = 0;
-var currentlyVisibleChannelsCount = 4;
+var channels = [];
+var channelReference = {};
+var currentlyVisibleChannelsCount = 0;
+var transmitOnChannel = '';
+var currentlyTransmittingOnChannel = '';
 
 var areRadioKeyboardShortcutsAvailable = true;
 
 var isChannelSettingsDialogActive = false;
 
+$.get('/channels', function channelResponse(response) {
+  channels = response;
+  reextractChannelReference();
+});
+
+function reextractChannelReference() {
+  var channelCount = channels.length;
+  for (var i = 0; i < channelCount; ++i) {
+    var channelInternalName = channels[i]['channelInternalName'];
+    channelReference[channelInternalName] = i;
+    
+    channels[i]['visible'] = true;
+    channels[i]['listenTo'] = false;
+  }
+  
+  currentlyVisibleChannelsCount = channelCount;
+}
+
+socket.on('channelOccupied', function channelOccupiedHandler(event) {
+  setChannelOccupied(event['channelInternalName'], true, event['occupiedBy']);
+});
+
+socket.on('channelReleased', function channelOccupiedHandler(event) {
+  setChannelOccupied(event['channelInternalName'], false);
+});
+
 /**
- * Set the channel to transmit on. Set to channel 0 to deactivate all.
- * @param channelId Number The channel to transmit on.
+ * Set the channel to transmit on. Set to channel '' to deactivate all.
+ * @param channelInternalName string The channel to transmit on.
  * @returns void
  */
-function setTransmitOnChannel(channelId) {
-  if (typeof channelId !== "number" || isNaN(channelId)) {
-    throw new Error("channelId not valid");
+function setTransmitOnChannel(channelInternalName) {
+  if (typeof channelInternalName !== "string") {
+    throw new Error("channelInternalName not valid");
+  }
+
+  if (channelInternalName !== '' && typeof channelReference[channelInternalName] == 'undefined') {
+    throw new Error("channel with channelInternalName " + channelInternalName + " not found");
   }
   
-  if (channelId !== 0 && !channels[channelId]) {
-    throw new Error("channel with id " + channelId.toString() + " not found");
-  }
-  
-  if (channelId !== 0 && !channels[channelId]['visible']) {
-    throw new Error("channel with id " + channelId.toString() + " is not visible");
+  var channelIndex = channelReference[channelInternalName];
+
+  if (channelInternalName !== '' && !channels[channelIndex]['visible']) {
+    throw new Error("channel with channelInternalName " + channelInternalName + " is not visible");
   }
 
   // Deactivate all channels.
@@ -66,52 +64,55 @@ function setTransmitOnChannel(channelId) {
   $(".TransmitOnActive").removeClass("TransmitOnActive");
 
   // Activate the selected channel
-  var channelButtonObject = $("#channelTransmitOn" + channelId.toString());
+  var channelButtonObject = $("#channelTransmitOn" + channelInternalName);
 
   if (typeof channelButtonObject !== "undefined") {
     channelButtonObject.removeClass("TransmitOnInactive");
     channelButtonObject.addClass("TransmitOnActive");
-    transmitOnChannel = channelId;
+    transmitOnChannel = channelInternalName;
   } else {
-    transmitOnChannel = 0;
+    transmitOnChannel = '';
   }
 }
 
-function toggleListenToChannel(channelId) {
-  if (typeof channelId !== "number" || isNaN(channelId) || !channels[channelId]) {
-    throw new Error("channelId not valid");
+function toggleListenToChannel(channelInternalName) {
+  if (typeof channelInternalName !== "string" || typeof channelReference[channelInternalName] == 'undefined') {
+    throw new Error("channelInternalName not valid");
   }
 
-  setListenToChannel(channelId, !channels[channelId]['listenTo']);
+  var channelIndex = channelReference[channelInternalName];
+  setListenToChannel(channelInternalName, !channels[channelIndex]['listenTo']);
 }
 
-function setListenToChannel(channelId, listenToChannel) {
-  if (typeof channelId !== "number" || isNaN(channelId) || !channels[channelId]) {
-    throw new Error("channelId not valid");
+function setListenToChannel(channelInternalName, listenToChannel) {
+  if (typeof channelInternalName !== "string" || typeof channelReference[channelInternalName] == 'undefined') {
+    throw new Error("channelInternalName not valid");
   }
   
+  var channelIndex = channelReference[channelInternalName];
+
   if (typeof listenToChannel !== "boolean") {
     throw new Error("listenToChannel not valid");
   }
 
-  var channelButtonObject = $("#channelListenTo" + channelId.toString());
+  var channelButtonObject = $("#channelListenTo" + channelInternalName);
 
   if (typeof channelButtonObject !== "undefined") {
     if (!listenToChannel && channelButtonObject.hasClass("ListenToActive")) {
       channelButtonObject.addClass("ListenToInactive");
       channelButtonObject.removeClass("ListenToActive");
-      channels[channelId]['listenTo'] = false;
+      channels[channelIndex]['listenTo'] = false;
     } else if (listenToChannel && channelButtonObject.hasClass("ListenToInactive")) {
       channelButtonObject.addClass("ListenToActive");
       channelButtonObject.removeClass("ListenToInactive");
-      channels[channelId]['listenTo'] = true;
+      channels[channelIndex]['listenTo'] = true;
     }
   }
 }
 
-function setChannelOccupied(channelId, isOccupied, occupiedBy) {
-  if (typeof channelId !== "number" || isNaN(channelId) || !channels[channelId]) {
-    throw new Error("channelId not valid");
+function setChannelOccupied(channelInternalName, isOccupied, occupiedBy) {
+  if (typeof channelInternalName !== "string" || typeof channelReference[channelInternalName] == 'undefined') {
+    throw new Error("channelInternalName not valid");
   }
 
   if (typeof isOccupied !== "boolean") {
@@ -124,8 +125,8 @@ function setChannelOccupied(channelId, isOccupied, occupiedBy) {
     throw new Error("occupiedBy not valid");
   }
 
-  var channelReceiveInformationDiv = '#channelReceiveStatus' + channelId.toString();
-  var channelNowSpeakingInformationDiv = '#channelNowSpeaking' + channelId.toString();
+  var channelReceiveInformationDiv = '#channelReceiveStatus' + channelInternalName;
+  var channelNowSpeakingInformationDiv = '#channelNowSpeaking' + channelInternalName;
 
   if (isOccupied) {
     $(channelReceiveInformationDiv).addClass("ReceiveActive");
@@ -151,72 +152,37 @@ function setChannelOccupied(channelId, isOccupied, occupiedBy) {
   }
 }
 
-function setPttOnChannel(channelId, sendActive) {
-  if (typeof channelId !== "number" || isNaN(channelId) || !channels[channelId]) {
-    throw new Error("channelId not valid");
+function setPttOnChannel(channelInternalName, sendActive) {
+  if (typeof channelInternalName !== "string" || typeof channelReference[channelInternalName] == 'undefined') {
+    throw new Error("channelInternalName not valid");
   }
 
   if (typeof sendActive !== "boolean") {
     throw new Error("sendActive not valid");
   }
 
-  var channelTransmitInformationDiv = '#channelTransmitStatus' + channelId.toString();
+  var channelTransmitInformationDiv = '#channelTransmitStatus' + channelInternalName;
 
   if (sendActive) {
-    if (currentlyTransmittingOnChannel === channelId) {
+    if (currentlyTransmittingOnChannel === channelInternalName) {
       return;
     }
 
-    if (currentlyTransmittingOnChannel !== 0) {
-      throw new Error("already transmitting on channel " + currentlyTransmittingOnChannel.toString());
+    if (currentlyTransmittingOnChannel !== '') {
+      throw new Error("already transmitting on channel " + currentlyTransmittingOnChannel);
     }
 
-    currentlyTransmittingOnChannel = channelId;
+    currentlyTransmittingOnChannel = channelInternalName;
 
     $(channelTransmitInformationDiv).addClass("TransmitActive");
     $(channelTransmitInformationDiv).removeClass("TransmitInactive");
     $('#pttOperation').addClass("pttOperationActive");
   } else {
-    if (currentlyTransmittingOnChannel === 0) {
+    if (currentlyTransmittingOnChannel === '') {
       throw new Error("Currently not transmitting. Cannot stop transmission.");
     }
 
-    // XXX Begin. Response for testing purposes
-    var temp = currentlyTransmittingOnChannel;
-
-    if (currentlyTransmittingOnChannel <= 2) {
-      setTimeout(function () {
-        setChannelOccupied(temp, true, "");
-      }, 1500);
-
-      setTimeout(function () {
-        setChannelOccupied(temp, false);
-      }, 3000);
-    }
-
-    if (currentlyTransmittingOnChannel === 3) {
-      setTimeout(function () {
-        setChannelOccupied(temp, true, "R 02/83-01");
-      }, 1500);
-
-      setTimeout(function () {
-        setChannelOccupied(temp, false);
-      }, 3000);
-    }
-    
-    if (currentlyTransmittingOnChannel === 4) {
-      setTimeout(function () {
-        setChannelOccupied(temp, true, "Kater Freib  1/19");
-      }, 1500);
-
-      setTimeout(function () {
-        setChannelOccupied(temp, false);
-      }, 3000);
-    }
-
-    // XXX End.
-
-    currentlyTransmittingOnChannel = 0;
+    currentlyTransmittingOnChannel = '';
 
     $(channelTransmitInformationDiv).addClass("TransmitInactive");
     $(channelTransmitInformationDiv).removeClass("TransmitActive");
@@ -242,13 +208,13 @@ function pttTriggerOperation(sendActive) {
   }
 
   if (sendActive) {
-    if (transmitOnChannel !== 0) {
+    if (transmitOnChannel !== '') {
       setPttOnChannel(transmitOnChannel, true);
     } else {
       setPttForbidden(true);
     }
   } else {
-    if (currentlyTransmittingOnChannel !== 0) {
+    if (currentlyTransmittingOnChannel !== '') {
       setPttOnChannel(currentlyTransmittingOnChannel, false);
     } else {
       setPttForbidden(false);
@@ -256,26 +222,30 @@ function pttTriggerOperation(sendActive) {
   }
 }
 
-function transmitOnChannelOperation(channelId) {
-  if (typeof channelId !== "number") {
-    throw new Error("channelId not valid");
+/**
+ * Sets the channel on which should be transmitted when PTT is pressed.
+ * @param {string} channelInternalName Channel to transmit on. Set to empty string to deactive sending channel.
+ * @returns {void}
+ */
+function transmitOnChannelOperation(channelInternalName) {
+  if (typeof channelInternalName !== "string" || typeof channelReference[channelInternalName] == 'undefined') {
+    throw new Error("channel " + channelInternalName + " not found");
   }
   
-  if (transmitOnChannel === channelId) {
-    channelId = 0;
+  var channelIndex = channelReference[channelInternalName];
+
+  if (transmitOnChannel === channelInternalName) {
+    // Toggle to off
+    channelInternalName = '';
   }
 
-  if (channelId !== 0 && !channels[channelId]) {
-    throw new Error("channel with id " + channelId.toString() + " not found");
-  }
-  
-  if (channelId !== 0 && !channels[channelId]['visible']) {
-    throw new Error("channel with id " + channelId.toString() + " is not visible");
+  if (channelInternalName !== '' && !channels[channelIndex]['visible']) {
+    throw new Error("channel " + channelInternalName + " is not visible");
   }
 
-  setTransmitOnChannel(channelId);
+  setTransmitOnChannel(channelInternalName);
 
-  if (channelId === 0) {
+  if (channelInternalName === '') {
     $('#pttOperation').attr("disabled", "");
     $('#transmitActivationTone1').attr("disabled", "");
     $('#transmitActivationTone2').attr("disabled", "");
@@ -296,36 +266,231 @@ function activationToneTransmissionTriggerOperation(activationToneNumber, sendAc
   }
 
   if (sendActive) {
-    if (transmitOnChannel !== 0) {
+    if (transmitOnChannel !== '') {
       setPttOnChannel(transmitOnChannel, true);
     } else {
-      alert("Kein Kanal ausgewÃ¤hlt");
+      alert("Kein Kanal ausgewählt");
     }
   } else {
-    if (currentlyTransmittingOnChannel !== 0) {
+    if (currentlyTransmittingOnChannel !== '') {
       setPttOnChannel(currentlyTransmittingOnChannel, false);
     }
   }
 }
 
+//
+// ChannelSettingsDialog
+//
+
+function showSettingsDialog(channelInternalName) {
+  if (typeof channelInternalName !== "string" || typeof channelReference[channelInternalName] == 'undefined') {
+    throw new Error("channel " + channelInternalName + " not found");
+  }
+  
+  var channelIndex = channelReference[channelInternalName];
+
+  areRadioKeyboardShortcutsAvailable = false;
+  isChannelSettingsDialogActive = true;
+
+  // Set field values
+  $('#channelSettingsDialogFieldChannelInternalName').val(channelInternalName);
+  $('#channelSettingsDialogFieldChannelName').val(channels[channelIndex]['name']);
+  $('#channelSettingsDialogFieldChannelDescription').val(channels[channelIndex]['description']);
+  $('#channelSettingsDialogFieldChannelOperationMode').val(channels[channelIndex]['operationMode']);
+  $('#channelSettingsDialogFieldChannelTriggerMode').val(channels[channelIndex]['triggerMode']);
+
+  $('#channelSettingsDialog').removeClass("channelSettingsDialogDisabled");
+  $('#blockUiOverlay').removeClass("blockUiOverlayDisabled");
+}
+
+function hideChannelSettingsDialog() {
+  areRadioKeyboardShortcutsAvailable = true;
+  isChannelSettingsDialogActive = false;
+
+  $('#channelSettingsDialog').addClass("channelSettingsDialogDisabled");
+  $('#blockUiOverlay').addClass("blockUiOverlayDisabled");
+}
+
+function processChannelSettingsFromDialog() {
+  var channelInternalNameString = $('#channelSettingsDialogFieldChannelInternalName').val();
+  var channelInternalName = String(channelInternalNameString);
+
+  if (typeof channelInternalName !== "string" || typeof channelReference[channelInternalName] == 'undefined') {
+    throw new Error("channel " + channelInternalName + " not found");
+  }
+
+  if ($('#channelSettingsDialogFieldChannelName').val() === "") {
+    $('#channelSettingsDialogFieldChannelName').addClass("fieldInvalid");
+    return;
+  } else {
+    $('#channelSettingsDialogFieldChannelName').removeClass("fieldInvalid");
+  }
+
+  if ($('#channelSettingsDialogFieldChannelDescription').val() === "") {
+    $('#channelSettingsDialogFieldChannelDescription').addClass("fieldInvalid");
+    return;
+  } else {
+    $('#channelSettingsDialogFieldChannelDescription').removeClass("fieldInvalid");
+  }
+
+  var channelDataToSave = {
+    name: $('#channelSettingsDialogFieldChannelName').val(),
+    description: $('#channelSettingsDialogFieldChannelDescription').val(),
+    operationMode: $('#channelSettingsDialogFieldChannelOperationMode').val(),
+    triggerMode: $('#channelSettingsDialogFieldChannelTriggerMode').val()
+  };
+
+  updateChannelData(channelInternalName, channelDataToSave);
+
+  hideChannelSettingsDialog();
+}
+
+//
+// Channel modification and visibility
+//
+function showChannel(channelInternalName) {
+  if (typeof channelInternalName !== "string" || typeof channelReference[channelInternalName] == 'undefined') {
+    throw new Error("channel " + channelInternalName + " not found");
+  }
+  
+  var channelIndex = channelReference[channelInternalName];
+
+  if (channels[channelIndex]['visible']) {
+    return;
+  }
+
+  channels[channelIndex]['visible'] = true;
+
+  var channelColDivId = '#colChannel' + channelInternalName;
+
+  $(channelColDivId).removeClass('colChannelInvisible');
+
+  var oldColCountClass = 'colChannel' + currentlyVisibleChannelsCount.toString() + 'Cols';
+  currentlyVisibleChannelsCount += 1;
+  var newColCountClass = 'colChannel' + currentlyVisibleChannelsCount.toString() + 'Cols';
+
+  $('.colChannel').removeClass(oldColCountClass);
+  $('.colChannel').addClass(newColCountClass);
+}
+
+function hideChannel(channelInternalName) {
+  if (typeof channelInternalName !== "string" || typeof channelReference[channelInternalName] == 'undefined') {
+    throw new Error("channel " + channelInternalName + " not found");
+  }
+  
+  var channelIndex = channelReference[channelInternalName];
+
+  if (!channels[channelIndex]['visible']) {
+    return;
+  }
+
+  if (transmitOnChannel === channelInternalName) {
+    setTransmitOnChannel('');
+  }
+
+  setListenToChannel(channelInternalName, false);
+
+  channels[channelIndex]['visible'] = false;
+
+  var channelColDivId = '#colChannel' + channelInternalName;
+
+  $(channelColDivId).addClass('colChannelInvisible');
+
+  var oldColCountClass = 'colChannel' + currentlyVisibleChannelsCount.toString() + 'Cols';
+  currentlyVisibleChannelsCount -= 1;
+  var newColCountClass = 'colChannel' + currentlyVisibleChannelsCount.toString() + 'Cols';
+
+  $('.colChannel').removeClass(oldColCountClass);
+  $('.colChannel').addClass(newColCountClass);
+}
+
+function updateChannelData(channelInternalName, channelData) {
+  if (typeof channelInternalName !== "string" || typeof channelReference[channelInternalName] == 'undefined') {
+    throw new Error("channel " + channelInternalName + " not found");
+  }
+  
+  var channelIndex = channelReference[channelInternalName];
+
+  if (typeof channelData !== "object") {
+    throw new Error("channelData not valid");
+  }
+
+  if (typeof channelData['name'] !== "string") {
+    throw new Error("channelData['name'] not valid");
+  }
+
+  if (typeof channelData['description'] !== "string") {
+    throw new Error("channelData['description'] not valid");
+  }
+
+  if (typeof channelData['operationMode'] !== "string") {
+    throw new Error("channelData['operationMode'] not valid");
+  }
+
+  if (typeof channelData['triggerMode'] !== "string") {
+    throw new Error("channelData['triggerMode'] not valid");
+  }
+
+  channels[channelIndex]['name'] = channelData['name'];
+  channels[channelIndex]['description'] = channelData['description'];
+  channels[channelIndex]['operationMode'] = channelData['operationMode'];
+  channels[channelIndex]['triggerMode'] = channelData['triggerMode'];
+
+  var channelNameDivId = '#channelName' + channelInternalName;
+  var channelDescriptionDivId = '#channelDescription' + channelInternalName;
+  var channelOperationModeDivId = '#channelOperationMode' + channelInternalName;
+  var channelTriggerModeDivId = '#channelTriggerMode' + channelInternalName;
+
+  $(channelNameDivId).text(channelData['name']);
+  $(channelDescriptionDivId).text(channelData['description']);
+  $(channelOperationModeDivId).text(channelData['operationMode']);
+  $(channelTriggerModeDivId).text(channelData['triggerMode']);
+}
+
 $(function () {
+  $('.channelLabel').on("click", function () {
+    if (!isChannelSettingsDialogActive) {
+      var channelInternalNameString = this.id.replace("channelLabel", "");
+      var channelInternalName = String(channelInternalNameString);
+      showSettingsDialog(channelInternalName);
+    }
+  });
+
+  $('#blockUiOverlay').on("click", function () {
+    if (isChannelSettingsDialogActive) {
+      hideChannelSettingsDialog();
+    }
+  });
+
+  $('#channelSettingsDialogButtonCancel').on("click", function () {
+    if (isChannelSettingsDialogActive) {
+      hideChannelSettingsDialog();
+    }
+  });
+
+  $('#channelSettingsDialogButtonSave').on("click", function () {
+    if (isChannelSettingsDialogActive) {
+      processChannelSettingsFromDialog();
+    }
+  });
+
   $('.channelListenTo').click(function () {
-    var channelIdString = this.id.replace("channelListenTo", "");
-    var channelId = parseInt(channelIdString);
-    toggleListenToChannel(channelId);
+    var channelInternalNameString = this.id.replace("channelListenTo", "");
+    var channelInternalName = String(channelInternalNameString);
+    toggleListenToChannel(channelInternalName);
   });
 
   $('.channelTransmitOn').click(function () {
-    var channelIdString = this.id.replace("channelTransmitOn", "");
+    var channelInternalNameString = this.id.replace("channelTransmitOn", "");
 
-    var channelId;
-    if (typeof channelIdString !== "string" || channelIdString === "") {
-      channelId = 0;
+    var channelInternalName;
+    if (typeof channelInternalNameString !== "string" || channelInternalNameString === "") {
+      channelInternalName = '';
     } else {
-      channelId = parseInt(channelIdString);
+      channelInternalName = String(channelInternalNameString);
     }
 
-    transmitOnChannelOperation(channelId);
+    transmitOnChannelOperation(channelInternalName);
   });
 
   // PTT
@@ -362,33 +527,47 @@ $(function () {
     if (typeof event === "undefined" || typeof event.keyCode !== "number") {
       return;
     }
+    
+    if (isChannelSettingsDialogActive && event.keyCode === 27) {  // Esc in channel settings dialog
+      hideChannelSettingsDialog();
+    }
 
-    if (areRadioKeyboardShortcutsAvailable && event.keyCode === 17) {  // Strg
+    if (isChannelSettingsDialogActive && event.keyCode === 13) {  // Enter in channel settings dialog
+      processChannelSettingsFromDialog();
+    }
+
+    if (areRadioKeyboardShortcutsAvailable && event.keyCode === 17) {  // Ctrl
       pttTriggerOperation(true);
     }
-
-    if (areRadioKeyboardShortcutsAvailable && event.keyCode >= 49 && event.keyCode <= 57) {  // 49 = 1, 57 = 9
-      var channelId = event.keyCode - 48;
-
-      toggleListenToChannel(channelId)
-    }
     
+    if (areRadioKeyboardShortcutsAvailable && event.keyCode >= 49 && event.keyCode <= 57) {  // 49 = 1, 57 = 9
+      var channelIndex = event.keyCode - 49;
+      
+      if (channels[channelIndex]) {
+        var channelInternalName = channels[channelIndex]['channelInternalName'];
+        toggleListenToChannel(channelInternalName);
+      }
+    }
+
     var mappingGermanKeyboardForChannels = {
-      81: 1,  // Q
-      87: 2,  // W
-      69: 3,  // E
-      82: 4,  // R
-      84: 5,  // T
-      90: 6,  // Z
-      85: 7,  // U
-      73: 8,  // I
+      81: 1, // Q
+      87: 2, // W
+      69: 3, // E
+      82: 4, // R
+      84: 5, // T
+      90: 6, // Z
+      85: 7, // U
+      73: 8, // I
       79: 9  // O
     };
-    
-    if (areRadioKeyboardShortcutsAvailable && typeof mappingGermanKeyboardForChannels[event.keyCode] === "number") {
-      var channelId = mappingGermanKeyboardForChannels[event.keyCode];
 
-      transmitOnChannelOperation(channelId);
+    if (areRadioKeyboardShortcutsAvailable && typeof mappingGermanKeyboardForChannels[event.keyCode] === "number") {
+      var channelIndex = mappingGermanKeyboardForChannels[event.keyCode]-1;
+      
+      if (channels[channelIndex]) {
+        var channelInternalName = channels[channelIndex]['channelInternalName'];
+        transmitOnChannelOperation(channelInternalName);
+      }
     }
   });
 
@@ -397,227 +576,8 @@ $(function () {
       return;
     }
 
-    if (areRadioKeyboardShortcutsAvailable && event.keyCode === 17) {  // Strg
+    if (areRadioKeyboardShortcutsAvailable && event.keyCode === 17) {  // Ctrl
       pttTriggerOperation(false);
     }
   });
 });
-
-//
-// ChannelSettingsDialog
-//
-
-function showSettingsDialog(channelId) {
-  if (typeof channelId !== "number" || isNaN(channelId)) {
-    throw new Error("channelId invalid");
-  }
-
-  if (!channels[channelId]) {
-    throw new Error("channel with id " + channelId.toString() + " not found");
-  }
-
-  areRadioKeyboardShortcutsAvailable = false;
-  isChannelSettingsDialogActive = true;
-
-  // Set field values
-  $('#channelSettingsDialogFieldChannelId').val(channelId);
-  $('#channelSettingsDialogFieldChannelName').val(channels[channelId]['name']);
-  $('#channelSettingsDialogFieldChannelDescription').val(channels[channelId]['description']);
-  $('#channelSettingsDialogFieldChannelOperationMode').val(channels[channelId]['operationMode']);
-  $('#channelSettingsDialogFieldChannelTriggerMode').val(channels[channelId]['triggerMode']);
-
-  $('#channelSettingsDialog').removeClass("channelSettingsDialogDisabled");
-  $('#blockUiOverlay').removeClass("blockUiOverlayDisabled");
-}
-
-function hideChannelSettingsDialog() {
-  areRadioKeyboardShortcutsAvailable = true;
-  isChannelSettingsDialogActive = false;
-
-  $('#channelSettingsDialog').addClass("channelSettingsDialogDisabled");
-  $('#blockUiOverlay').addClass("blockUiOverlayDisabled");
-}
-
-function processChannelSettingsFromDialog() {
-  var channelIdString = $('#channelSettingsDialogFieldChannelId').val();
-  var channelId = parseInt(channelIdString);
-  
-  if (!channels[channelId]) {
-    throw new Error("channel with id " + channelId.toString() + " not found");
-  }
-  
-  if ($('#channelSettingsDialogFieldChannelName').val() === "") {
-    $('#channelSettingsDialogFieldChannelName').addClass("fieldInvalid");
-    return;
-  } else {
-    $('#channelSettingsDialogFieldChannelName').removeClass("fieldInvalid");
-  }
-  
-  if ($('#channelSettingsDialogFieldChannelDescription').val() === "") {
-    $('#channelSettingsDialogFieldChannelDescription').addClass("fieldInvalid");
-    return;
-  } else {
-    $('#channelSettingsDialogFieldChannelDescription').removeClass("fieldInvalid");
-  }
-  
-  var channelDataToSave = {
-    name: $('#channelSettingsDialogFieldChannelName').val(),
-    description: $('#channelSettingsDialogFieldChannelDescription').val(),
-    operationMode: $('#channelSettingsDialogFieldChannelOperationMode').val(),
-    triggerMode: $('#channelSettingsDialogFieldChannelTriggerMode').val()
-  };
-  
-  updateChannelData(channelId, channelDataToSave);
-  
-  hideChannelSettingsDialog();
-}
-
-$(function () {
-  $('.channelLabel').on("click", function () {
-    if (!isChannelSettingsDialogActive) {
-      var channelIdString = this.id.replace("channelLabel", "");
-      var channelId = parseInt(channelIdString);
-      showSettingsDialog(channelId);
-    }
-  });
-
-  $('#blockUiOverlay').on("click", function () {
-    if (isChannelSettingsDialogActive) {
-      hideChannelSettingsDialog();
-    }
-  });
-
-  $('#channelSettingsDialogButtonCancel').on("click", function () {
-    if (isChannelSettingsDialogActive) {
-      hideChannelSettingsDialog();
-    }
-  });
-  
-  $('#channelSettingsDialogButtonSave').on("click", function () {
-    if (isChannelSettingsDialogActive) {
-      processChannelSettingsFromDialog();
-    }
-  });
-
-  $(document).on("keydown", function (event) {
-    if (typeof event === "undefined" || typeof event.keyCode !== "number") {
-      return;
-    }
-    
-    if (isChannelSettingsDialogActive && event.keyCode === 27) {  // Esc
-      hideChannelSettingsDialog();
-    }
-    
-    if (isChannelSettingsDialogActive && event.keyCode === 13) {  // Enter
-      processChannelSettingsFromDialog();
-    }
-  });
-});
-
-//
-// Channel modification and visibility
-//
-function showChannel(channelId) {
-  if (typeof channelId !== "number") {
-    throw new Error("channelId not valid");
-  }
-  
-  if (!channels[channelId]) {
-    throw new Error("channel with id " + channelId.toString() + "not found");
-  }
-  
-  if (channels[channelId]['visible']) {
-    return;
-  }
-  
-  channels[channelId]['visible'] = true;
-  
-  var channelColDivId = '#colChannel' + channelId.toString();
-  
-  $(channelColDivId).removeClass('colChannelInvisible');
-  
-  var oldColCountClass = 'colChannel' + currentlyVisibleChannelsCount.toString() + 'Cols';
-  currentlyVisibleChannelsCount += 1;
-  var newColCountClass = 'colChannel' + currentlyVisibleChannelsCount.toString() + 'Cols';
-  
-  $('.colChannel').removeClass(oldColCountClass);
-  $('.colChannel').addClass(newColCountClass);
-}
-
-function hideChannel(channelId) {
-  if (typeof channelId !== "number") {
-    throw new Error("channelId not valid");
-  }
-  
-  if (!channels[channelId]) {
-    throw new Error("channel with id " + channelId.toString() + "not found");
-  }
-  
-  if (!channels[channelId]['visible']) {
-    return;
-  }
-  
-  if (transmitOnChannel === channelId) {
-    setTransmitOnChannel(0);
-  }
-  
-  setListenToChannel(channelId, false);
-
-  channels[channelId]['visible'] = false;
-  
-  var channelColDivId = '#colChannel' + channelId.toString();
-  
-  $(channelColDivId).addClass('colChannelInvisible');
-  
-  var oldColCountClass = 'colChannel' + currentlyVisibleChannelsCount.toString() + 'Cols';
-  currentlyVisibleChannelsCount -= 1;
-  var newColCountClass = 'colChannel' + currentlyVisibleChannelsCount.toString() + 'Cols';
-  
-  $('.colChannel').removeClass(oldColCountClass);
-  $('.colChannel').addClass(newColCountClass);
-}
-
-function updateChannelData(channelId, channelData) {
-  if (typeof channelId !== "number") {
-    throw new Error("channelId not valid");
-  }
-  
-  if (!channels[channelId]) {
-    throw new Error("channel with id " + channelId.toString() + "not found");
-  }
-  
-  if (typeof channelData !== "object") {
-    throw new Error("channelData not valid");
-  }
-  
-  if (typeof channelData['name'] !== "string") {
-    throw new Error("channelData['name'] not valid");
-  }
-  
-  if (typeof channelData['description'] !== "string") {
-    throw new Error("channelData['description'] not valid");
-  }
-  
-  if (typeof channelData['operationMode'] !== "string") {
-    throw new Error("channelData['operationMode'] not valid");
-  }
-  
-  if (typeof channelData['triggerMode'] !== "string") {
-    throw new Error("channelData['triggerMode'] not valid");
-  }
-  
-  channels[channelId]['name'] = channelData['name'];
-  channels[channelId]['description'] = channelData['description'];
-  channels[channelId]['operationMode'] = channelData['operationMode'];
-  channels[channelId]['triggerMode'] = channelData['triggerMode'];
-  
-  var channelNameDivId = '#channelName' + channelId.toString();
-  var channelDescriptionDivId = '#channelDescription' + channelId.toString();
-  var channelOperationModeDivId = '#channelOperationMode' + channelId.toString();
-  var channelTriggerModeDivId = '#channelTriggerMode' + channelId.toString();
-  
-  $(channelNameDivId).text(channelData['name']);
-  $(channelDescriptionDivId).text(channelData['description']);
-  $(channelOperationModeDivId).text(channelData['operationMode']);
-  $(channelTriggerModeDivId).text(channelData['triggerMode']);
-}

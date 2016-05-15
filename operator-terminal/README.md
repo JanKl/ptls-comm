@@ -14,3 +14,6 @@ Furthermore these steps will be required:
 1. Head into the <a href="gui/">gui/</a> folder in the checked out folder `cd ptls-comm/operator-terminal/gui`.
 1. Run `npm update` to update the dependencies.
 1. Run `npm start` to start the application.
+
+## Constraints
+* Only letters and numbers are allowed as channelInternalName. Furthermore the channelInternalName must be unique.
