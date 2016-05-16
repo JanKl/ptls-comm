@@ -8,6 +8,7 @@ var currentlyVisibleChannelsCount = 0;
 var transmitOnChannel = '';
 var transmitButtonActiveSpeechRequest = false;
 var currentlyTransmittingOnChannel = '';
+var operatorTerminalId = randomString(32);  // Will be replaced with a stored value, if available.
 
 var areRadioKeyboardShortcutsAvailable = true;
 
@@ -37,6 +38,26 @@ socket.on('channelOccupied', function channelOccupiedHandler(event) {
 
 socket.on('channelReleased', function channelOccupiedHandler(event) {
   setChannelOccupied(event['channelInternalName'], false);
+});
+
+socket.on('channelTransmissionStart', function channelTransmissioStartHandler(event) {
+  if (event.operatorTerminalId != operatorTerminalId) {
+    var channelTransmitInformationDiv = '#channelTransmitStatus' + event.channelInternalName;
+    
+    $(channelTransmitInformationDiv).addClass("TransmitActiveOtherOperator");
+    $(channelTransmitInformationDiv).removeClass("TransmitActive");
+    $(channelTransmitInformationDiv).removeClass("TransmitInactive");
+  }
+});
+
+socket.on('channelTransmissionStop', function channelTransmissionStopHandler(event) {
+  if (event.operatorTerminalId != operatorTerminalId) {
+    var channelTransmitInformationDiv = '#channelTransmitStatus' + event.channelInternalName;
+    
+    $(channelTransmitInformationDiv).removeClass("TransmitActiveOtherOperator");
+    $(channelTransmitInformationDiv).removeClass("TransmitActive");
+    $(channelTransmitInformationDiv).addClass("TransmitInactive");
+  }
 });
 
 /**
@@ -176,6 +197,7 @@ function setPttOnChannel(channelInternalName, sendActive) {
     currentlyTransmittingOnChannel = channelInternalName;
 
     $(channelTransmitInformationDiv).addClass("TransmitActive");
+    $(channelTransmitInformationDiv).removeClass("TransmitActiveOtherOperator");
     $(channelTransmitInformationDiv).removeClass("TransmitInactive");
     $('#pttOperation').addClass("pttOperationActive");
   } else {
@@ -186,6 +208,7 @@ function setPttOnChannel(channelInternalName, sendActive) {
     currentlyTransmittingOnChannel = '';
 
     $(channelTransmitInformationDiv).addClass("TransmitInactive");
+    $(channelTransmitInformationDiv).removeClass("TransmitActiveOtherOperator");
     $(channelTransmitInformationDiv).removeClass("TransmitActive");
     $('#pttOperation').removeClass("pttOperationActive");
   }
@@ -227,7 +250,7 @@ function pttTriggerOperation(sendActive) {
       // pttForbidden.
       transmitButtonActiveSpeechRequest = true;
       $.ajax({
-        url: '/channels/' + transmitOnChannel + '/speechRequest',
+        url: '/channels/' + transmitOnChannel + '/speechRequest?operatorTerminalId=' + operatorTerminalId,
         type: 'PUT',
         success: function speechRequestSuccess() {
           if (transmitButtonActiveSpeechRequest) {
@@ -247,7 +270,7 @@ function pttTriggerOperation(sendActive) {
     transmitButtonActiveSpeechRequest = false;
     if (currentlyTransmittingOnChannel !== '') {
       $.ajax({
-        url: '/channels/' + transmitOnChannel + '/speechTerminated',
+        url: '/channels/' + transmitOnChannel + '/speechTerminated?operatorTerminalId=' + operatorTerminalId,
         type: 'PUT',
         success: function speechTerminatedSuccess() {
           setPttOnChannel(currentlyTransmittingOnChannel, false);

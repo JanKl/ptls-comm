@@ -17,3 +17,4 @@ Furthermore these steps will be required:
 
 ## Constraints
 * Only letters and numbers are allowed as channelInternalName. Furthermore the channelInternalName must be unique.
+* The automatically generated operator terminal ID may manually be changed. One has to ensure that there is no transmission ongoing when the change is performed. Additionally the operator terminal ID must be unique.

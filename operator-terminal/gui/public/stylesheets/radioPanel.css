@@ -195,6 +195,15 @@ html, body {
     background-size: contain;
 }
 
+.TransmitActiveOtherOperator {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto;
+    background-image: url("../images/triangleTransmitActiveOtherOperator.svg");
+    background-repeat: no-repeat;
+    background-size: contain;
+}
+
 .channelInteraction {
     margin: 10px 0;
     clear: both;

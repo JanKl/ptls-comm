@@ -160,7 +160,15 @@ app.put('/channels/:channelInternalName/speechRequest', function (req, res, next
     return;
   }
 
-  var channelInternalName = req.params.channelInternalName;
+  var channelInternalName = String(req.params.channelInternalName);
+  
+  if (typeof req.query.operatorTerminalId == 'undefined') {
+    res.status(400);
+    res.end();
+    return;
+  }
+
+  var operatorTerminalId = String(req.query.operatorTerminalId);
 
   // Check if channel exists
   if (!channelLocalData[channelInternalName]) {
@@ -193,6 +201,11 @@ app.put('/channels/:channelInternalName/speechRequest', function (req, res, next
       res.end();
     } else {
       // Now transmitting
+      io.emit('channelTransmissionStart', {
+        channelInternalName: channelInternalName,
+        operatorTerminalId: operatorTerminalId
+      });
+      
       res.status(204);
       res.end();
     }
@@ -211,7 +224,15 @@ app.put('/channels/:channelInternalName/speechTerminated', function (req, res, n
     return;
   }
 
-  var channelInternalName = req.params.channelInternalName;
+  var channelInternalName = String(req.params.channelInternalName);
+  
+  if (typeof req.query.operatorTerminalId == 'undefined') {
+    res.status(400);
+    res.end();
+    return;
+  }
+
+  var operatorTerminalId = String(req.query.operatorTerminalId);
 
   // Check if channel exists
   if (!channelLocalData[channelInternalName]) {
@@ -242,6 +263,11 @@ app.put('/channels/:channelInternalName/speechTerminated', function (req, res, n
       res.status(500);
       res.end();
     } else {
+      io.emit('channelTransmissionStop', {
+        channelInternalName: channelInternalName,
+        operatorTerminalId: operatorTerminalId
+      });
+      
       res.status(204);
       res.end();
     }
