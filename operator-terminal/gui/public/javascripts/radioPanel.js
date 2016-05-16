@@ -291,6 +291,11 @@ function transmitOnChannelOperation(channelInternalName) {
   if (typeof channelInternalName !== "string" || typeof channelReference[channelInternalName] == 'undefined') {
     throw new Error("channel " + channelInternalName + " not found");
   }
+  
+  // If we are currently sending first stop the transmission.
+  if (currentlyTransmittingOnChannel != '') {
+    pttTriggerOperation(false);
+  }
 
   var channelIndex = channelReference[channelInternalName];
 
