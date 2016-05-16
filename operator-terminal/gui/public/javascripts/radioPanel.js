@@ -8,7 +8,7 @@ var currentlyVisibleChannelsCount = 0;
 var transmitOnChannel = '';
 var transmitButtonActiveSpeechRequest = false;
 var currentlyTransmittingOnChannel = '';
-var operatorTerminalId = randomString(32);  // Will be replaced with a stored value, if available.
+var operatorTerminalId = randomString(32);
 
 var areRadioKeyboardShortcutsAvailable = true;
 
