@@ -6,6 +6,7 @@ var channels = [];
 var channelReference = {};
 var currentlyVisibleChannelsCount = 0;
 var transmitOnChannel = '';
+var transmitButtonActiveSpeechRequest = false;
 var currentlyTransmittingOnChannel = '';
 
 var areRadioKeyboardShortcutsAvailable = true;
@@ -22,11 +23,11 @@ function reextractChannelReference() {
   for (var i = 0; i < channelCount; ++i) {
     var channelInternalName = channels[i]['channelInternalName'];
     channelReference[channelInternalName] = i;
-    
+
     channels[i]['visible'] = true;
     channels[i]['listenTo'] = false;
   }
-  
+
   currentlyVisibleChannelsCount = channelCount;
 }
 
@@ -51,7 +52,7 @@ function setTransmitOnChannel(channelInternalName) {
   if (channelInternalName !== '' && typeof channelReference[channelInternalName] == 'undefined') {
     throw new Error("channel with channelInternalName " + channelInternalName + " not found");
   }
-  
+
   var channelIndex = channelReference[channelInternalName];
 
   if (channelInternalName !== '' && !channels[channelIndex]['visible']) {
@@ -88,7 +89,7 @@ function setListenToChannel(channelInternalName, listenToChannel) {
   if (typeof channelInternalName !== "string" || typeof channelReference[channelInternalName] == 'undefined') {
     throw new Error("channelInternalName not valid");
   }
-  
+
   var channelIndex = channelReference[channelInternalName];
 
   if (typeof listenToChannel !== "boolean") {
@@ -206,34 +207,44 @@ function pttTriggerOperation(sendActive) {
   if (typeof sendActive !== "boolean") {
     throw new Error("sendActive not valid");
   }
-  
+
   if (sendActive && currentlyTransmittingOnChannel) {
     // Start a transmission, but we are already transmitting.
     return;
   }
-  
+
   if (!sendActive && !currentlyTransmittingOnChannel) {
     // Stop a transmission, but we aren't transmitting anyway.
+    transmitButtonActiveSpeechRequest = false;
     setPttForbidden(false);
     return;
   }
 
   if (sendActive) {
     if (transmitOnChannel !== '') {
+      // The transmitButtonActiveSpeechRequest will be used to ensure, that there
+      // will be no race conditions that lead to false positive display of
+      // pttForbidden.
+      transmitButtonActiveSpeechRequest = true;
       $.ajax({
         url: '/channels/' + transmitOnChannel + '/speechRequest',
         type: 'PUT',
         success: function speechRequestSuccess() {
-          setPttOnChannel(transmitOnChannel, true);
+          if (transmitButtonActiveSpeechRequest) {
+            setPttOnChannel(transmitOnChannel, true);
+          }
         },
         error: function speechRequestError() {
-          setPttForbidden(true);
+          if (transmitButtonActiveSpeechRequest) {
+            setPttForbidden(true);
+          }
         }
       });
     } else {
       setPttForbidden(true);
     }
   } else {
+    transmitButtonActiveSpeechRequest = false;
     if (currentlyTransmittingOnChannel !== '') {
       $.ajax({
         url: '/channels/' + transmitOnChannel + '/speechTerminated',
@@ -257,7 +268,7 @@ function transmitOnChannelOperation(channelInternalName) {
   if (typeof channelInternalName !== "string" || typeof channelReference[channelInternalName] == 'undefined') {
     throw new Error("channel " + channelInternalName + " not found");
   }
-  
+
   var channelIndex = channelReference[channelInternalName];
 
   if (transmitOnChannel === channelInternalName) {
@@ -312,7 +323,7 @@ function showSettingsDialog(channelInternalName) {
   if (typeof channelInternalName !== "string" || typeof channelReference[channelInternalName] == 'undefined') {
     throw new Error("channel " + channelInternalName + " not found");
   }
-  
+
   var channelIndex = channelReference[channelInternalName];
 
   areRadioKeyboardShortcutsAvailable = false;
@@ -378,7 +389,7 @@ function showChannel(channelInternalName) {
   if (typeof channelInternalName !== "string" || typeof channelReference[channelInternalName] == 'undefined') {
     throw new Error("channel " + channelInternalName + " not found");
   }
-  
+
   var channelIndex = channelReference[channelInternalName];
 
   if (channels[channelIndex]['visible']) {
@@ -403,7 +414,7 @@ function hideChannel(channelInternalName) {
   if (typeof channelInternalName !== "string" || typeof channelReference[channelInternalName] == 'undefined') {
     throw new Error("channel " + channelInternalName + " not found");
   }
-  
+
   var channelIndex = channelReference[channelInternalName];
 
   if (!channels[channelIndex]['visible']) {
@@ -434,7 +445,7 @@ function updateChannelData(channelInternalName, channelData) {
   if (typeof channelInternalName !== "string" || typeof channelReference[channelInternalName] == 'undefined') {
     throw new Error("channel " + channelInternalName + " not found");
   }
-  
+
   var channelIndex = channelReference[channelInternalName];
 
   if (typeof channelData !== "object") {
@@ -471,6 +482,21 @@ function updateChannelData(channelInternalName, channelData) {
   $(channelDescriptionDivId).text(channelData['description']);
   $(channelOperationModeDivId).text(channelData['operationMode']);
   $(channelTriggerModeDivId).text(channelData['triggerMode']);
+}
+
+/**
+ * Creates a pseudo-random string consisting of characters and numbers.
+ * http://stackoverflow.com/a/10727155
+ * @param {number} length Length of the string to create
+ * @returns {string} Created string
+ */
+function randomString(length) {
+  var chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  var result = '';
+  for (var i = length; i > 0; --i) {
+    result += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return result;
 }
 
 $(function () {
@@ -553,7 +579,7 @@ $(function () {
     if (typeof event === "undefined" || typeof event.keyCode !== "number") {
       return;
     }
-    
+
     if (isChannelSettingsDialogActive && event.keyCode === 27) {  // Esc in channel settings dialog
       hideChannelSettingsDialog();
     }
@@ -565,10 +591,10 @@ $(function () {
     if (areRadioKeyboardShortcutsAvailable && event.keyCode === 17) {  // Ctrl
       pttTriggerOperation(true);
     }
-    
+
     if (areRadioKeyboardShortcutsAvailable && event.keyCode >= 49 && event.keyCode <= 57) {  // 49 = 1, 57 = 9
       var channelIndex = event.keyCode - 49;
-      
+
       if (channels[channelIndex]) {
         var channelInternalName = channels[channelIndex]['channelInternalName'];
         toggleListenToChannel(channelInternalName);
@@ -588,8 +614,8 @@ $(function () {
     };
 
     if (areRadioKeyboardShortcutsAvailable && typeof mappingGermanKeyboardForChannels[event.keyCode] === "number") {
-      var channelIndex = mappingGermanKeyboardForChannels[event.keyCode]-1;
-      
+      var channelIndex = mappingGermanKeyboardForChannels[event.keyCode] - 1;
+
       if (channels[channelIndex]) {
         var channelInternalName = channels[channelIndex]['channelInternalName'];
         transmitOnChannelOperation(channelInternalName);
