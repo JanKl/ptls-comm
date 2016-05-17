@@ -252,6 +252,7 @@ function pttTriggerOperation(sendActive) {
       $.ajax({
         url: '/channels/' + transmitOnChannel + '/speechRequest?operatorTerminalId=' + operatorTerminalId,
         type: 'PUT',
+        timeout: 500,
         success: function speechRequestSuccess() {
           if (transmitButtonActiveSpeechRequest) {
             setPttOnChannel(transmitOnChannel, true);
@@ -272,6 +273,7 @@ function pttTriggerOperation(sendActive) {
       $.ajax({
         url: '/channels/' + transmitOnChannel + '/speechTerminated?operatorTerminalId=' + operatorTerminalId,
         type: 'PUT',
+        timeout: 500,
         success: function speechTerminatedSuccess() {
           setPttOnChannel(currentlyTransmittingOnChannel, false);
         }
