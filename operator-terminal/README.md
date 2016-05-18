@@ -15,6 +15,11 @@ Furthermore these steps will be required:
 1. Run `npm update` to update the dependencies.
 1. Run `npm start` to start the application.
 
+## Janus Installation
+1. Head your browser to <a href="https://github.com/meetecho/janus-gateway">https://github.com/meetecho/janus-gateway</a>. This is the Janus Repository on GitHub and they provide a detailed installation guide for it.
+1. Install Janus Gateway
+1. Install https://github.com/cargomedia/janus-gateway-audioroom plug-in (for the compilation of the files I had to trick the script by providing all janus header files in a subdir called janus/)
+
 ## Constraints
 * Only letters and numbers are allowed as channelInternalName. Furthermore the channelInternalName must be unique.
 * The automatically generated operator terminal ID may manually be changed. One has to ensure that there is no transmission ongoing when the change is performed. Additionally the operator terminal ID must be unique.
