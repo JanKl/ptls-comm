@@ -62,6 +62,12 @@ function ElementNotFoundError(elementName) {
 ElementNotFoundError.prototype = Object.create(Error.prototype);
 ElementNotFoundError.prototype.constructor = ElementNotFoundError;
 
+// Export janus configuration
+app.get('/janusConfig', function (req, res, next) {
+  res.status(200);
+  res.json(config['janus']);
+});
+
 // Export data of all available channels
 app.get('/channels', function (req, res, next) {
   res.status(200);

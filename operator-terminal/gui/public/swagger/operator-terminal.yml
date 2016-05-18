@@ -15,6 +15,18 @@ consumes:
 produces:
   - application/json
 paths:
+  /janusConfig:
+    get:
+      description: Returns the current Janus configuration
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: configuration response
+          schema:
+            $ref: '#/definitions/janusConfiguration'
+        default:
+          description: unexpected error
   /channels:
     get:
       description: Returns all available channels
@@ -141,6 +153,16 @@ paths:
         default:
           description: unexpected error
 definitions:
+  janusConfiguration:
+    type: object
+    properties:
+      janusHost:
+        type: string
+      janusPort:
+        type: integer
+        format: int32
+      janusPath:
+        type: string
   channel:
     type: object
     properties:
@@ -159,4 +181,3 @@ definitions:
       radioInterfaceWebPort:
         type: integer
         format: int32
-

@@ -36,5 +36,10 @@
       "radioInterfaceWebHost": "",
       "radioInterfaceWebPort": 0
     }
-  ]
+  ],
+  "janus": {
+    "janusHost": "roip-mcu",
+    "janusPort": "8088",
+    "janusPath": "/janus"
+  }
 }
