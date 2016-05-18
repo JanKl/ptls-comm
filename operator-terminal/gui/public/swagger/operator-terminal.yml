@@ -118,6 +118,18 @@ paths:
           description: Unique terminal ID
           required: true
           type: string
+        - name: janusSessionId
+          in: query
+          description: ID that was assigned for the Janus session of this terminal
+          required: true
+          type: integer
+          format: int32
+        - name: janusPluginHandleId
+          in: query
+          description: ID that was assigned for the Janus plugin handle of this terminal and channel
+          required: true
+          type: integer
+          format: int32
       responses:
         '204':
           description: now transmitting
@@ -143,6 +155,18 @@ paths:
           description: Unique terminal ID
           required: true
           type: string
+        - name: janusSessionId
+          in: query
+          description: ID that was assigned for the Janus session of this terminal
+          required: true
+          type: integer
+          format: int32
+        - name: janusPluginHandleId
+          in: query
+          description: ID that was assigned for the Janus plugin handle of this terminal and channel
+          required: true
+          type: integer
+          format: int32
       responses:
         '204':
           description: radio device informed

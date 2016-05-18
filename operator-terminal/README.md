@@ -18,7 +18,8 @@ Furthermore these steps will be required:
 ## Janus Installation
 1. Head your browser to <a href="https://github.com/meetecho/janus-gateway">https://github.com/meetecho/janus-gateway</a>. This is the Janus Repository on GitHub and they provide a detailed installation guide for it.
 1. Install Janus Gateway
-1. Install https://github.com/cargomedia/janus-gateway-audioroom plug-in (for the compilation of the files I had to trick the script by providing all janus header files in a subdir called janus/)
+1. Install <a href="https://github.com/cargomedia/janus-gateway-audioroom">https://github.com/cargomedia/janus-gateway-audioroom</a> plug-in (for the compilation of the files I had to trick the script by providing all janus header files in a subdir called janus/)
+1. Update the adapter.js file from <a href="http://webrtc.github.io/adapter/adapter-latest.js">http://webrtc.github.io/adapter/adapter-latest.js</a> if necessary.
 
 ## Constraints
 * Only letters and numbers are allowed as channelInternalName. Furthermore the channelInternalName must be unique.

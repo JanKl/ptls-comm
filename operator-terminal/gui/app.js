@@ -167,7 +167,7 @@ app.put('/channels/:channelInternalName/speechRequest', function (req, res, next
   }
 
   var channelInternalName = String(req.params.channelInternalName);
-  
+
   if (typeof req.query.operatorTerminalId == 'undefined') {
     res.status(400);
     res.end();
@@ -176,16 +176,32 @@ app.put('/channels/:channelInternalName/speechRequest', function (req, res, next
 
   var operatorTerminalId = String(req.query.operatorTerminalId);
 
+  if (typeof req.query.janusSessionId == 'undefined') {
+    res.status(400);
+    res.end();
+    return;
+  }
+
+  var janusSessionId = parseInt(req.query.janusSessionId);
+
+  if (typeof req.query.janusPluginHandleId == 'undefined') {
+    res.status(400);
+    res.end();
+    return;
+  }
+
+  var janusPluginHandleId = parseInt(req.query.janusPluginHandleId);
+
   // Check if channel exists
   if (!channelLocalData[channelInternalName]) {
     res.status(404);
     res.end();
     return;
   }
-  
+
   // Retrieve the data from the cache
   var configIndex = channelLocalData[channelInternalName]['configIndex'];
-  
+
   // Check if a radio interface was assigned to the channel 
   if (config['channels'][configIndex]['radioInterfaceWebHost'] == '' || config['channels'][configIndex]['radioInterfaceWebPort'] == 0) {
     res.status(503);
@@ -211,7 +227,9 @@ app.put('/channels/:channelInternalName/speechRequest', function (req, res, next
         channelInternalName: channelInternalName,
         operatorTerminalId: operatorTerminalId
       });
-      
+
+      setOperatorTerminalMuted(false, janusSessionId, janusPluginHandleId);
+
       res.status(204);
       res.end();
     }
@@ -231,7 +249,7 @@ app.put('/channels/:channelInternalName/speechTerminated', function (req, res, n
   }
 
   var channelInternalName = String(req.params.channelInternalName);
-  
+
   if (typeof req.query.operatorTerminalId == 'undefined') {
     res.status(400);
     res.end();
@@ -240,23 +258,39 @@ app.put('/channels/:channelInternalName/speechTerminated', function (req, res, n
 
   var operatorTerminalId = String(req.query.operatorTerminalId);
 
+  if (typeof req.query.janusSessionId == 'undefined') {
+    res.status(400);
+    res.end();
+    return;
+  }
+
+  var janusSessionId = parseInt(req.query.janusSessionId);
+
+  if (typeof req.query.janusPluginHandleId == 'undefined') {
+    res.status(400);
+    res.end();
+    return;
+  }
+
+  var janusPluginHandleId = parseInt(req.query.janusPluginHandleId);
+
   // Check if channel exists
   if (!channelLocalData[channelInternalName]) {
     res.status(404);
     res.end();
     return;
   }
-  
+
   // Retrieve the data from the cache
   var configIndex = channelLocalData[channelInternalName]['configIndex'];
-  
+
   // Check if a radio interface was assigned to the channel 
   if (config['channels'][configIndex]['radioInterfaceWebHost'] == '' || config['channels'][configIndex]['radioInterfaceWebPort'] == 0) {
     res.status(503);
     res.end();
     return;
   }
-  
+
   // Inform the radio device about the transmission end
   http.get({
     hostname: config['channels'][configIndex]['radioInterfaceWebHost'],
@@ -273,7 +307,9 @@ app.put('/channels/:channelInternalName/speechTerminated', function (req, res, n
         channelInternalName: channelInternalName,
         operatorTerminalId: operatorTerminalId
       });
-      
+
+      setOperatorTerminalMuted(true, janusSessionId, janusPluginHandleId);
+
       res.status(204);
       res.end();
     }
@@ -283,6 +319,45 @@ app.put('/channels/:channelInternalName/speechTerminated', function (req, res, n
     res.end();
   });
 });
+
+function setOperatorTerminalMuted(muted, janusSessionId, janusPluginHandleId) {
+  var janusData = {
+    body: {
+      request: 'configure',
+      muted: muted
+    },
+    janus: 'message',
+    transaction: randomString(25)
+  };
+
+  var httpOptions = {
+    hostname: config['janus']['janusHost'],
+    port: config['janus']['janusPort'],
+    method: 'POST',
+    path: config['janus']['janusPath'] + '/' + janusSessionId + '/' + janusPluginHandleId
+  };
+
+  var req = http.request(httpOptions,
+      function (res) {
+        var body = '';
+
+        res.on('data', (data) => (body += data));
+
+        res.on('end', function () {
+          var bodyParsed = JSON.parse(body);
+
+          if (!bodyParsed['janus'] || bodyParsed['janus'] != 'ack') {
+            console.error('Couldn\'t set mute/unmute: ' + body + '. request was ' + JSON.stringify(janusData) + ' to ' + JSON.stringify(httpOptions));
+          }
+        });
+      })
+      .on('error', function (err) {
+        console.error("Got error while trying to set mute/unmute on janus session '" + janusSessionId + "' and plugin handler '" + janusPluginHandleId + "': " + err.message);
+      });
+
+  req.write(JSON.stringify(janusData));
+  req.end();
+}
 
 // Data storage
 function storeChannelData(channelObject) {
@@ -327,6 +402,21 @@ function storeChannelData(channelObject) {
 
   fs.writeFileSync(configPath, JSON.stringify(configFileData));
   config = configFileData;  // Update cache
+}
+
+/**
+ * Creates a pseudo-random string consisting of characters and numbers.
+ * http://stackoverflow.com/a/10727155
+ * @param {number} length Length of the string to create
+ * @returns {string} Created string
+ */
+function randomString(length) {
+  var chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  var result = '';
+  for (var i = length; i > 0; --i) {
+    result += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return result;
 }
 
 // catch 404 and forward to error handler
