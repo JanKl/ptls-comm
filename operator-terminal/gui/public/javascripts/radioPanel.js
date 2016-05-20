@@ -232,6 +232,9 @@ function setTransmitOnChannel(channelInternalName) {
     channelButtonObject.removeClass("TransmitOnInactive");
     channelButtonObject.addClass("TransmitOnActive");
     transmitOnChannel = channelInternalName;
+    
+    // Ensure channel is activated for listening
+    setListenToChannel(channelInternalName, true);
   } else {
     transmitOnChannel = '';
   }
