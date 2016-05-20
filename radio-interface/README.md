@@ -28,3 +28,11 @@ Radio interface hardware and software for a Raspberry Pi.
     1. Run `npm start` to start the application.
 1. Create the circuit as described in the <a href="circuit/">circuit/</a> folder.
 1. Connect your radio and your Pi to the circuit.
+1. Installation of the audio endpoint
+  1. I have to admit that this is more a hacking solution and could be better. Nevertheless this is the way: Install X windows and open a browser window on the device serving the radio interface. You can do this following these steps:
+  1. Open a second terminal on the device
+  1. Run `sudo apt-get -y install xutils iceweasel`
+  1. Configure your system to be able to display X11 sessions (For Windows: http://www.geo.mtu.edu/geoschem/docs/putty_install.html)
+  1. Run `iceweasel http://roip-mcu:3000/headless.html?channelInternalName=abc` where abc is the channel to transmit and receive the audio for.
+  1. If you like, you can use `about:config` to set the value of `media.navigator.permission.disabled` to true. This will diable the dialog where you will be asked to allow access to the microphone on any website, so be careful.
+  1. If you are fancy, you can use Xvfb to start firefox/iceweasel after you configured the permission dialog to be disabled.
