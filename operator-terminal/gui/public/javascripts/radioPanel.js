@@ -264,10 +264,12 @@ function setListenToChannel(channelInternalName, listenToChannel) {
       channelButtonObject.addClass("ListenToInactive");
       channelButtonObject.removeClass("ListenToActive");
       channels[channelIndex]['listenTo'] = false;
+      $('#remoteMixedAudio' + channelInternalName).prop("muted", true);
     } else if (listenToChannel && channelButtonObject.hasClass("ListenToInactive")) {
       channelButtonObject.addClass("ListenToActive");
       channelButtonObject.removeClass("ListenToInactive");
       channels[channelIndex]['listenTo'] = true;
+      $('#remoteMixedAudio' + channelInternalName).prop("muted", false);
     }
   }
 }
