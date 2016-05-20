@@ -35,4 +35,4 @@ Radio interface hardware and software for a Raspberry Pi.
   1. Configure your system to be able to display X11 sessions (For Windows: http://www.geo.mtu.edu/geoschem/docs/putty_install.html)
   1. Run `iceweasel http://roip-mcu:3000/headless.html?channelInternalName=abc` where abc is the channel to transmit and receive the audio for.
   1. If you like, you can use `about:config` to set the value of `media.navigator.permission.disabled` to true. This will diable the dialog where you will be asked to allow access to the microphone on any website, so be careful.
-  1. If you are fancy, you can use Xvfb to start firefox/iceweasel after you configured the permission dialog to be disabled.
+  1. If you are fancy improving this hack, you can use Xvfb to start firefox/iceweasel after you configured the permission dialog to be disabled.
