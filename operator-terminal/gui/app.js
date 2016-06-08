@@ -98,7 +98,7 @@ app.get('/channels/:channelInternalName', function (req, res, next) {
   res.json(config['channels'][configIndex]);
 });
 
-// Start sending on channel
+// Inform the connected clients that the channel is now occupied
 app.put('/channels/:channelInternalName/setChannelOccupied', function (req, res, next) {
   if (typeof req.params.channelInternalName == 'undefined') {
     res.status(400);
@@ -132,7 +132,7 @@ app.put('/channels/:channelInternalName/setChannelOccupied', function (req, res,
   res.end();
 });
 
-// Start sending on channel
+// Inform the connected clients that the channel is now free again
 app.put('/channels/:channelInternalName/setChannelReleased', function (req, res, next) {
   if (typeof req.params.channelInternalName == 'undefined') {
     res.status(400);
