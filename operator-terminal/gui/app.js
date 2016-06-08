@@ -199,6 +199,18 @@ app.put('/channels/:channelInternalName/speechRequest', function (req, res, next
     return;
   }
 
+  // Ensure no other operator is speaking
+  var currentOperatorSpeaking = channelLocalData[channelInternalName]['currentOperatorSpeaking'];
+  
+  if (currentOperatorSpeaking != "" && currentOperatorSpeaking != operatorTerminalId) {
+    res.status(503);
+    res.end();
+    return;
+  }
+  
+  // Set the information that we are now transmiting
+  channelLocalData[channelInternalName]['currentOperatorSpeaking'] = operatorTerminalId;
+
   // Retrieve the data from the cache
   var configIndex = channelLocalData[channelInternalName]['configIndex'];
 
@@ -218,6 +230,8 @@ app.put('/channels/:channelInternalName/speechRequest', function (req, res, next
     path: '/channels/' + channelInternalName + '/transmissionStart'
   }).on('response', function (speechRequestResponse) {
     if (speechRequestResponse.statusCode != 204) {
+      channelLocalData[channelInternalName]['currentOperatorSpeaking'] = '';
+      
       console.error("Got unexpected status code '" + res.statusCode + "' while trying to start the transmission on channel '" + channelInternalName + "'.");
       res.status(500);
       res.end();
@@ -234,6 +248,8 @@ app.put('/channels/:channelInternalName/speechRequest', function (req, res, next
       res.end();
     }
   }).on('error', function (err) {
+    channelLocalData[channelInternalName]['currentOperatorSpeaking'] = '';
+    
     console.error("Got error while trying to start the transmission on channel '" + channelInternalName + "': " + err.message);
     res.status(500);
     res.end();
@@ -280,6 +296,10 @@ app.put('/channels/:channelInternalName/speechTerminated', function (req, res, n
     res.end();
     return;
   }
+  
+  // Reset the currentOperatorSpeaking information so that someone else can
+  // transmit.
+  channelLocalData[channelInternalName]['currentOperatorSpeaking'] = '';
 
   // Retrieve the data from the cache
   var configIndex = channelLocalData[channelInternalName]['configIndex'];
